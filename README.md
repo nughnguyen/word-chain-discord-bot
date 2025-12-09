@@ -24,7 +24,7 @@
 
 ```bash
 git clone https://github.com/nughnguyen/word-chain-discord-bot.git
-cd Noi-Tu
+cd word-chain-discord-bot-main
 ```
 
 ### Bước 2: Cài Đặt Dependencies
