@@ -445,9 +445,14 @@ class GameCog(commands.Cog):
         
         # Word Length/Advanced Bonus
         word_info = None
+        meaning_vi = None
         is_advanced = False
         
         if game_state['language'] == 'en':
+            # Get Vietnamese meaning for ALL English words
+            if validator.cambridge_api:
+                meaning_vi = await validator.cambridge_api.get_vietnamese_meaning(word)
+
             # Check length bonus
             if len(word) >= config.LONG_WORD_THRESHOLD:
                 # Check dictionary for advanced status
@@ -480,21 +485,33 @@ class GameCog(commands.Cog):
             next_player_id=next_player.id
         )
         
-        # Gửi thông báo
-        embed = embeds.create_correct_answer_embed(
-            message.author.mention,
-            word,
-            points,
-            bonus_reason
+        # Gửi thông báo (Gộp Chính xác + Nghĩa)
+        embed_title = f"{emojis.get_random_correct_emoji()} {word.upper()}"
+        if word_info and word_info.get('phonetic'):
+             embed_title += f" /{word_info['phonetic']}/"
+
+        description_lines = []
+        
+        # 1. Meaning
+        if meaning_vi:
+            description_lines.append(f"📖 **{meaning_vi}**")
+        elif word_info and word_info.get('definition'):
+            description_lines.append(f"� *{word_info['definition']}*")
+            
+        # 2. Player stats
+        stats_line = f"\n{message.author.mention} **+{points} điểm**"
+        if bonus_reason:
+            bonus_single = bonus_reason.replace('\n', ', ')
+            stats_line += f" • {bonus_single}"
+            
+        description_lines.append(stats_line)
+
+        embed = discord.Embed(
+            title=embed_title,
+            description="\n".join(description_lines),
+            color=config.COLOR_SUCCESS
         )
         
-        # [V2] Add Word Info
-        if word_info:
-            if word_info.get('phonetic'):
-                embed.add_field(name="🔊 Phiên âm", value=f"/{word_info['phonetic']}/", inline=True)
-            if word_info.get('definition'):
-                embed.add_field(name="📖 Nghĩa", value=word_info['definition'], inline=False)
-
         await message.channel.send(embed=embed)
         
         # Check if bot challenge (solo mode)

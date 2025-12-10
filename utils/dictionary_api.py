@@ -142,11 +142,53 @@ class CambridgeDictionaryAPI(DictionaryAPI):
                     logger.warning(f"Cambridge API returned status {response.status} for word '{word}'")
                     return None
         
+            return None
+        
         except asyncio.TimeoutError:
             logger.error(f"⏰ Timeout checking Cambridge for word '{word}'")  
             return None
         except Exception as e:
             logger.error(f"❌ Error checking Cambridge for word '{word}': {e}")
+            return None
+
+    async def get_vietnamese_meaning(self, word: str) -> Optional[str]:
+        """
+        Get Vietnamese meaning from Cambridge English-Vietnamese Dictionary
+        Returns: meaning string or None
+        """
+        try:
+            word_clean = word.lower().strip().replace(' ', '-')
+            url = f"https://dictionary.cambridge.org/dictionary/english-vietnamese/{word_clean}"
+            
+            headers = {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+            }
+            
+            if not self.session:
+                await self.initialize()
+
+            async with self.session.get(url, headers=headers, timeout=aiohttp.ClientTimeout(total=8)) as response:
+                if response.status == 200:
+                    text = await response.text()
+                    
+                    # Extract first translation
+                    # Search for <span class="trans dtrans" lang="vi">
+                    start_marker = 'class="trans dtrans" lang="vi">'
+                    start_idx = text.find(start_marker)
+                    
+                    if start_idx > 0:
+                        # Found it
+                        content_start = start_idx + len(start_marker)
+                        end_idx = text.find('</span>', content_start)
+                        if end_idx > content_start:
+                            meaning = text[content_start:end_idx].strip()
+                            return meaning
+                    
+                    return None
+                else:
+                    return None
+        except Exception as e:
+            logger.error(f"❌ Error getting Vietnamese meaning for '{word}': {e}")
             return None
 
 

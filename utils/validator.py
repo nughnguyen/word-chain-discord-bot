@@ -140,3 +140,10 @@ class WordValidator:
             return possible[0]
         
         return None
+
+    @property
+    def cambridge_api(self):
+        """Access to Cambridge API through global service"""
+        if dictionary_service:
+            return dictionary_service.cambridge_api
+        return None
