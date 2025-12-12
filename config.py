@@ -51,6 +51,7 @@ COLOR_ERROR = 0xFF0000    # Red
 COLOR_INFO = 0x3498DB     # Blue
 COLOR_WARNING = 0xFFA500  # Orange
 COLOR_GOLD = 0xFFD700     # Gold
+COLOR_NEUTRAL = 0x95A5A6  # Grey
 
 # Dictionary API Settings
 USE_DICTIONARY_API = os.getenv('USE_DICTIONARY_API', 'true').lower() == 'true'
