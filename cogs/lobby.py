@@ -45,6 +45,15 @@ class LobbyCog(commands.Cog):
                  await vtv_cog.start_game(interaction)
             else:
                 await interaction.response.send_message("❌ Lỗi: Game Vua Tiếng Việt chưa được load.", ephemeral=True)
+
+        elif game_type == "baucua":
+            # Call Bau Cua start command
+            bc_cog = self.bot.get_cog("BauCuaCog")
+            if bc_cog:
+                 await bc_cog.start_game(interaction)
+            else:
+                 await interaction.response.send_message("❌ Lỗi: Game Bầu Cua chưa được load.", ephemeral=True)
+
         else:
              await interaction.response.send_message("❌ Loại game không hợp lệ.", ephemeral=True)
 
@@ -77,6 +86,13 @@ class LobbyCog(commands.Cog):
             vtv_cog = self.bot.get_cog("VuaTiengVietCog")
             if vtv_cog:
                  await vtv_cog.stop_game(interaction)
+            else:
+                 await interaction.response.send_message("❌ Lỗi cog.", ephemeral=True)
+
+        elif game_type == "baucua":
+            bc_cog = self.bot.get_cog("BauCuaCog")
+            if bc_cog:
+                 await bc_cog.stop_game(interaction)
             else:
                  await interaction.response.send_message("❌ Lỗi cog.", ephemeral=True)
 

@@ -215,6 +215,13 @@ class AdminCog(commands.Cog):
         """Đặt kênh nối từ tiếng anh"""
         await self.db.set_channel_config(interaction.channel_id, interaction.guild_id, "wordchain_en")
         await interaction.response.send_message(f"✅ Đã đặt kênh này làm kênh chuyên **Nối Từ (English)**!\nGõ `/start` để chơi ngay.", ephemeral=True)
+
+    @app_commands.command(name="kenh-bau-cua", description="⚙️ Đặt kênh này làm kênh Bầu Cua")
+    @app_commands.checks.has_permissions(administrator=True)
+    async def set_baucua_channel(self, interaction: discord.Interaction):
+        """Đặt kênh bầu cua"""
+        await self.db.set_channel_config(interaction.channel_id, interaction.guild_id, "baucua")
+        await interaction.response.send_message(f"✅ Đã đặt kênh này làm kênh chuyên **Bầu Cua**!\nGõ `/start` để chơi ngay.", ephemeral=True)
     
 
 

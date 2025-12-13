@@ -107,6 +107,7 @@ class HelpView(discord.ui.View):
                     "`/kenh-noi-tu-vn` - Set kênh Nối Từ (VN)\n"
                     "`/kenh-noi-tu-en` - Set kênh Nối Từ (EN)\n"
                     "`/kenh-vua-tieng-viet` - Set kênh VTV\n"
+                    "`/kenh-bau-cua` - Set kênh Bầu Cua\n"
                     "`/set-game-channel` - Cài đặt nâng cao"
                 ),
                 inline=False

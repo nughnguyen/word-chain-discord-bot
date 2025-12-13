@@ -61,6 +61,17 @@ EMOJI_FACEBOOK = "<facebook:1449211949861830908>"
 EMOJI_INVITE = "<Invite:1449328307526176881>"
 EMOJI_LINK = "<:link1:1449328347661471890>"
 
+# Bầu Cua (6 mặt của xúc xắc)
+SIDE_1 = "<:alien:1449342306825142352>"
+SIDE_2 = "<:star:1449342324998930585>"
+SIDE_3 = "<:rocket:1449342321471782973>"
+SIDE_4 = "<:planet:1449342319370178560>"
+SIDE_5 = "<:galaxy:1449342316887277659>"
+SIDE_6 = "<:comet:1449342313636564992>"
+
+# Loading
+LOADING = "<a:loading:1449348490269294773>"
+
 def get_rank_emoji(rank: int) -> str:
     """Trả về emoji dựa trên thứ hạng"""
     if rank == 1:

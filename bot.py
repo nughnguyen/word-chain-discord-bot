@@ -78,6 +78,7 @@ class WordChainBot(commands.Bot):
             'cogs.leaderboard',
             'cogs.admin',
             'cogs.vua_tieng_viet',
+            'cogs.bau_cua',
             'cogs.lobby',
             'cogs.help'
         ]
