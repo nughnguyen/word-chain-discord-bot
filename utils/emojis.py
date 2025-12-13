@@ -58,9 +58,8 @@ EMOJI_YOUTUBE = "<youtube:1449212122314838149>"
 EMOJI_TIKTOK = "<tiktok:1449212222747447357>"
 EMOJI_INSTAGRAM = "<instagram:1449212173673959454>"
 EMOJI_FACEBOOK = "<facebook:1449211949861830908>"
-EMOJI_INVITE = "<invite:xxxxx>"
-EMOJI_WEBSITE = "<website:xxxxx>"
-EMOJI_SUPPORT = "<support:xxxxx>"
+EMOJI_INVITE = "<Invite:1449328307526176881>"
+EMOJI_LINK = "<:link1:1449328347661471890>"
 
 def get_rank_emoji(rank: int) -> str:
     """Trả về emoji dựa trên thứ hạng"""

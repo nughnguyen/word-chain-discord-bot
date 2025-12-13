@@ -16,7 +16,7 @@ class HelpView(discord.ui.View):
             label="Website", 
             style=discord.ButtonStyle.link, 
             url="https://quochung.id.vn", 
-            emoji=emojis.EMOJI_YOUTUBE
+            emoji=emojis.EMOJI_LINK
         ))
         self.add_item(discord.ui.Button(
             label="Support Server", 
@@ -28,7 +28,7 @@ class HelpView(discord.ui.View):
             label="Invite", 
             style=discord.ButtonStyle.link, 
             url="https://discord.com/oauth2/authorize?client_id=1305035261897343026&permissions=8&integration_type=0&scope=bot", 
-            emoji=emojis.EMOJI_FACEBOOK # Facebook or generic website emoji
+            emoji=emojis.EMOJI_INVITE # Facebook or generic website emoji
         ))
 
     @discord.ui.select(
@@ -171,8 +171,8 @@ class Help(commands.Cog):
         ping = round(self.bot.latency * 1000)
         server_count = len(self.bot.guilds)
         user_count = sum(guild.member_count for guild in self.bot.guilds)
-        # Count only distinct commands (excluding aliases if possible, but distinct objects is good enough)
-        command_count = len([cmd for cmd in self.bot.walk_commands()])
+        # Count app commands (slash commands) since most are app_commands
+        command_count = len(self.bot.tree.get_commands())
         
         status_text = (
             f"{emojis.BAR} {emojis.ANIMATED_EMOJI_DOT} Current Ping: {ping}ms\n"
