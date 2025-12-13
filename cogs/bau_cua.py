@@ -118,6 +118,7 @@ class BauCuaView(discord.ui.View):
 
         # Lock funds (don't deduct from DB yet)
         self.locked_balance[user_id] = locked + amount
+        new_locked = self.locked_balance[user_id]
         
         if user_id not in self.bets:
             self.bets[user_id] = {}
@@ -127,8 +128,11 @@ class BauCuaView(discord.ui.View):
         self.bets[user_id][side_name] = current_side_bet + amount
         self.user_total_bet[user_id] += amount
         
+        remaining = points - new_locked
+        
         await interaction.response.send_message(
-            f"✅ Đã cược **{amount:,}** coinz vào {side_emoji} {side_name}!", 
+            f"✅ Đã cược **{amount:,}** coinz {emojis.ANIMATED_EMOJI_COINZ} vào {side_emoji} {side_name}!\n"
+            f"Số dư khả dụng: **{remaining:,}** coinz {emojis.ANIMATED_EMOJI_COINZ}", 
             ephemeral=True
         )
         # Note: We do NOT call update_embed here anymore to avoid rate-limit clashes with the animation loop.
@@ -344,20 +348,47 @@ class BauCuaCog(commands.Cog):
         await asyncio.sleep(1)
 
         
-        # Calculate Winnings
-        winners = []
+        # Calculate Winnings & Summary
+        summary_lines = []
         
         for user_id, user_bets in valid_bets.items():
-            user_winnings = 0
+            total_bet = sum(user_bets.values())
+            total_payout = 0
+            win_details = []
+            
             for side_name, amount in user_bets.items():
                 count = result_names.count(side_name)
                 if count > 0:
-                    payout = amount + (amount * count)
-                    user_winnings += payout
+                    profit = amount * count
+                    # Payout = Bet + Profit
+                    payout_for_side = amount + profit
+                    total_payout += payout_for_side
+                    
+                    side_emoji = self.sides_map[side_name]
+                    # Format: 🐟 x2 (+Bonus)
+                    win_details.append(f"{side_emoji} x{count} (+{profit:,})")
+
+            # Update DB if payout > 0
+            if total_payout > 0:
+                await self.db.add_points(user_id, interaction.guild_id, total_payout)
+
+            net_outcome = total_payout - total_bet
+            user_mention = f"<@{user_id}>"
             
-            if user_winnings > 0:
-                await self.db.add_points(user_id, interaction.guild_id, user_winnings)
-                winners.append((user_id, user_winnings))
+            if net_outcome > 0:
+                # Winner
+                detail_str = ", ".join(win_details)
+                line = f"🎉 {user_mention}: **+{net_outcome:,}** {emojis.ANIMATED_EMOJI_COINZ}\n   ╚ {detail_str}"
+                summary_lines.append(line)
+            elif net_outcome == 0:
+                # Break even
+                line = f"😐 {user_mention}: **Hòa vốn** {emojis.ANIMATED_EMOJI_COINZ}"
+                summary_lines.append(line)
+            else:
+                # Loser
+                # Show negative amount
+                line = f"💸 {user_mention}: **{net_outcome:,}** {emojis.ANIMATED_EMOJI_COINZ}"
+                summary_lines.append(line)
 
         # Final Result Embed
         result_emojis = [self.sides_map[name] for name in result_names]
@@ -368,11 +399,10 @@ class BauCuaCog(commands.Cog):
         )
         end_embed.description = final_desc + "\n\n"
         
-        if winners:
-            winners_text = "\n".join([f"🎉 <@{uid}> nhận **{amt:,}** coinz" for uid, amt in winners])
-            end_embed.add_field(name="🏆 Người Chiến Thắng", value=winners_text, inline=False)
+        if summary_lines:
+            end_embed.add_field(name="📊 Tổng Kết", value="\n".join(summary_lines), inline=False)
         else:
-            end_embed.add_field(name="😅 Kết Quả", value="Chúc các bạn may mắn lần sau! Không ai thắng cả.", inline=False)
+            end_embed.add_field(name="😅 Kết Quả", value="Không có người chơi nào đặt cược!", inline=False)
             
         await view.message.edit(embed=end_embed)
 
