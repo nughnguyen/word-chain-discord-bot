@@ -68,6 +68,7 @@ class HelpView(discord.ui.View):
                     f"  `/pass` - Bỏ lượt ({config.PASS_COST} coinz)\n"
                     f"• **Điểm Score**:\n"
                     f"  Đúng: +{config.POINTS_CORRECT} | Từ dài: +{config.POINTS_LONG_WORD}\n"
+                    f"  Tốc độ: +100 (5s) / +50 (10s) / +20 (20s)\n"
                     f"  Timeout: {config.POINTS_TIMEOUT} | Sai: {config.POINTS_WRONG}"
                 ),
                 inline=False
@@ -82,7 +83,7 @@ class HelpView(discord.ui.View):
                     f"  `/start` - Bắt đầu game tại kênh VTV\n"
                     f"  `/stop` - Dừng game\n"
                     f"• **Cách chơi**: Gõ đáp án trực tiếp vào chat.\n"
-                    f"• **Phần thưởng**: Lên tới {config.POINTS_VUA_TIENG_VIET} coinz!"
+                    f"• **Phần thưởng**: Từ {config.POINTS_VUA_TIENG_VIET:,} đến {config.POINTS_VUA_TIENG_VIET_SIEU_KHO:,} coinz (Tùy độ khó)!"
                 ),
                 inline=False
             )
@@ -103,10 +104,9 @@ class HelpView(discord.ui.View):
             embed.add_field(
                 name="⚙️ **Cài Đặt Game**",
                 value=(
-                    "`/kenh-noi-tu` - Set kênh Nối Từ\n"
+                    "`/kenh-noi-tu-vn` - Set kênh Nối Từ (VN)\n"
+                    "`/kenh-noi-tu-en` - Set kênh Nối Từ (EN)\n"
                     "`/kenh-vua-tieng-viet` - Set kênh VTV\n"
-                    "`/kenh-bau-cua` - Set kênh Bầu Cua\n"
-                    "`/kenh-keo-bua-bao` - Set kênh Kéo Búa Bao\n"
                     "`/set-game-channel` - Cài đặt nâng cao"
                 ),
                 inline=False
