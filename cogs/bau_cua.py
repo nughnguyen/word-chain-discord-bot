@@ -8,34 +8,35 @@ from utils import emojis
 from database.db_manager import DatabaseManager
 
 class BetModal(discord.ui.Modal):
-    def __init__(self, side_name, side_emoji, max_bet, current_balance, callback_func):
+    def __init__(self, side_name, side_emoji, current_balance, callback_func):
         super().__init__(title=f"Đặt Cược: {side_name}")
-        self.max_bet = max_bet
         self.current_balance = current_balance
         self.callback_func = callback_func
         self.side_name = side_name
         self.side_emoji = side_emoji
 
         self.amount = discord.ui.TextInput(
-            label=f"Số tiền cược (Max {max_bet:,})",
-            placeholder="Nhập số tiền...",
+            label=f"Số tiền cược (Có: {current_balance:,})",
+            placeholder="Nhập số tiền hoặc 'all' để tất tay...",
             min_length=1,
-            max_length=10,
+            max_length=20, # Increase length just in case
             required=True
         )
         self.add_item(self.amount)
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
-            amount = int(self.amount.value.replace(',', '').replace('.', ''))
+            raw_value = self.amount.value.lower().strip()
+            
+            if raw_value in ["all", "all in", "tat ca", "hết"]:
+                 amount = self.current_balance
+            else:
+                 amount = int(self.amount.value.replace(',', '').replace('.', ''))
+            
             if amount <= 0:
                 await interaction.response.send_message("❌ Số tiền cược phải lớn hơn 0!", ephemeral=True)
                 return
             
-            if amount > self.max_bet:
-                await interaction.response.send_message(f"❌ Cược tối đa là {self.max_bet:,} coinz!", ephemeral=True)
-                return
-
             # Check logic, but don't deduct yet.
             # However, we need to track "potential spend" to prevent over-betting across multiple clicks
             # callback_func handles the validation of "locked" funds.
@@ -58,12 +59,12 @@ class BauCuaView(discord.ui.View):
         
         # Define sides with names and emojis
         self.sides = [
-            {"id": "side_1", "name": "Alien", "emoji": emojis.SIDE_1},
-            {"id": "side_2", "name": "Star", "emoji": emojis.SIDE_2},
-            {"id": "side_3", "name": "Rocket", "emoji": emojis.SIDE_3},
-            {"id": "side_4", "name": "Planet", "emoji": emojis.SIDE_4},
-            {"id": "side_5", "name": "Galaxy", "emoji": emojis.SIDE_5},
-            {"id": "side_6", "name": "Comet", "emoji": emojis.SIDE_6},
+            {"id": "side_1", "name": "Bau", "emoji": emojis.SIDE_1},
+            {"id": "side_2", "name": "Cua", "emoji": emojis.SIDE_2},
+            {"id": "side_3", "name": "Tom", "emoji": emojis.SIDE_3},
+            {"id": "side_4", "name": "Ca", "emoji": emojis.SIDE_4},
+            {"id": "side_5", "name": "Nai", "emoji": emojis.SIDE_5},
+            {"id": "side_6", "name": "Ga", "emoji": emojis.SIDE_6},
         ]
 
         # Add betting buttons
@@ -98,7 +99,6 @@ class BauCuaView(discord.ui.View):
             modal = BetModal(
                 side_name=side['name'], 
                 side_emoji=side['emoji'],
-                max_bet=500000,
                 current_balance=available, # Pass available balance for UI hint
                 callback_func=self.process_bet
             )
@@ -159,7 +159,7 @@ class BauCuaView(discord.ui.View):
             # 2. Update TOTAL BETS field (Index 0)
             total_pot = sum(self.user_total_bet.values())
             total_players = len(self.bets)
-            embed.set_field_at(0, name="💰 Tổng Cược", value=f"**{total_pot:,}** coinz ({total_players} người chơi)", inline=False)
+            embed.set_field_at(0, name="Tổng Cược", value=f"**{total_pot:,}** coinz {emojis.ANIMATED_EMOJI_COINZ} ({total_players} người chơi)", inline=False)
             
             # 3. Update BET LIST field (Index 2)
             bet_details = []
@@ -249,7 +249,7 @@ class BauCuaCog(commands.Cog):
         )
         
         # Pre-add "Total Bet" field at index 0
-        embed.add_field(name="💰 Tổng Cược", value="**0** coinz (0 người chơi)", inline=False)
+        embed.add_field(name="💰 Tổng Cược", value="**0** coinz {emojis.ANIMATED_EMOJI_COINZ} (0 người chơi)", inline=False)
         
         # Pre-add "Animation" field at index 1
         embed.add_field(name="🎲 Xúc Xắc Đang Lắc...", value=f"{emojis.SIDE_1} {emojis.SIDE_2} {emojis.SIDE_3}\n{emojis.SIDE_4} {emojis.SIDE_5} {emojis.SIDE_6}", inline=False)

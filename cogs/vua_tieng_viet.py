@@ -218,7 +218,7 @@ class VuaTiengVietCog(commands.Cog):
             
             embed = discord.Embed(title="🎉 CHÚC MỪNG CHIẾN THẮNG!", color=0x00FF00)
             embed.description = f"👑 {message.author.mention} đã trả lời chính xác!\n\nĐáp án: **{correct_answer}**"
-            embed.add_field(name="Phần thưởng", value=f"💰 +{points:,} coinz\n(Trừ gợi ý: -{current_base_points - points:,})", inline=False)
+            embed.add_field(name="Phần thưởng", value=f"{points:,} coinz {emojis.ANIMATED_EMOJI_COINZ}\n(Trừ gợi ý: -{current_base_points - points:,} coinz {emojis.ANIMATED_EMOJI_COINZ})", inline=False)
             
             if len(correct_answer) > 25:
                embed.set_footer(text="🔥 CÂU HỎI *SIÊU KHÓ* > 25 KÝ TỰ: x10 QUỸ THƯỞNG (50,000)! 🔥")

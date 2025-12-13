@@ -94,6 +94,9 @@ class DatabaseManager:
             
             # Migrate points to global (guild_id = 0)
             await self.migrate_global_points(db)
+            
+            # Migrate daily columns
+            await self.migrate_daily_columns(db)
 
     async def migrate_global_points(self, db):
         """Chuyển đổi điểm sang hệ thống global (guild_id=0)"""
@@ -113,6 +116,52 @@ class DatabaseManager:
         # Actually safer to just set them to 0.
         await db.execute("UPDATE player_stats SET total_points = 0 WHERE guild_id != 0")
         await db.commit()
+    
+    async def migrate_daily_columns(self, db):
+        """Thêm các cột cho tính năng daily"""
+        try:
+            await db.execute("ALTER TABLE player_stats ADD COLUMN last_daily_claim TIMESTAMP")
+        except Exception:
+            pass
+            
+        try:
+            await db.execute("ALTER TABLE player_stats ADD COLUMN daily_streak INTEGER DEFAULT 0")
+        except Exception:
+            pass
+            
+        try:
+            await db.execute("ALTER TABLE player_stats ADD COLUMN last_daily_reward INTEGER DEFAULT 0")
+        except Exception:
+            pass
+        
+        await db.commit()
+
+    async def get_daily_info(self, user_id: int):
+        """Lấy thông tin daily của user (Global info stored at guild_id=0)"""
+        async with aiosqlite.connect(self.db_path) as db:
+            async with db.execute("""
+                SELECT last_daily_claim, daily_streak, last_daily_reward
+                FROM player_stats
+                WHERE user_id = ? AND guild_id = 0
+            """, (user_id,)) as cursor:
+                row = await cursor.fetchone()
+                return row if row else (None, 0, 0)
+
+    async def update_daily(self, user_id: int, reward: int, streak: int):
+        """Cập nhật daily và cộng tiền"""
+        async with aiosqlite.connect(self.db_path) as db:
+            # 1. Update daily specific stats
+            await db.execute("""
+                INSERT INTO player_stats (user_id, guild_id, last_daily_claim, daily_streak, last_daily_reward, total_points)
+                VALUES (?, 0, CURRENT_TIMESTAMP, ?, ?, ?)
+                ON CONFLICT(user_id, guild_id) DO UPDATE SET
+                    last_daily_claim = CURRENT_TIMESTAMP,
+                    daily_streak = ?,
+                    last_daily_reward = ?,
+                    total_points = total_points + ?
+            """, (user_id, streak, reward, reward, streak, reward, reward))
+            
+            await db.commit()
     
     # ===== GAME STATE METHODS =====
     
@@ -393,3 +442,50 @@ class DatabaseManager:
             ) as cursor:
                 row = await cursor.fetchone()
                 return row[0] if row else None
+
+    # ===== AGGREGATE STATS METHODS =====
+
+    async def get_player_stats(self, user_id: int, guild_id: int) -> Optional[Dict]:
+        """Lấy thống kê chi tiết của người chơi (kết hợp local stats và global points)"""
+        async with aiosqlite.connect(self.db_path) as db:
+            # 1. Get Global Points
+            async with db.execute(
+                "SELECT total_points FROM player_stats WHERE user_id = ? AND guild_id = 0",
+                (user_id,)
+            ) as cursor:
+                point_row = await cursor.fetchone()
+                total_points = point_row[0] if point_row else 0
+
+            # 2. Get Local Stats
+            async with db.execute("""
+                SELECT games_played, words_submitted, 
+                       correct_words, wrong_words, longest_word, longest_word_length
+                FROM player_stats
+                WHERE user_id = ? AND guild_id = ?
+            """, (user_id, guild_id)) as cursor:
+                stats_row = await cursor.fetchone()
+            
+            if not stats_row and total_points == 0:
+                # Không có data gì cả
+                return None
+            
+            # Nếu không có local stats thì default 0/null
+            if not stats_row:
+                games_played = 0
+                words_submitted = 0
+                correct_words = 0
+                wrong_words = 0
+                longest_word = ""
+                longest_word_length = 0
+            else:
+                games_played, words_submitted, correct_words, wrong_words, longest_word, longest_word_length = stats_row
+
+            return {
+                'total_points': total_points, # Global
+                'games_played': games_played,
+                'words_submitted': words_submitted,
+                'correct_words': correct_words,
+                'wrong_words': wrong_words,
+                'longest_word': longest_word,
+                'longest_word_length': longest_word_length
+            }

@@ -143,7 +143,7 @@ class AdminCog(commands.Cog):
             ephemeral=True
         )
     
-    @app_commands.command(name="reset-stats", description="🔄 Reset thống kê (Admin only)")
+    @app_commands.command(name="reset-stats", description="🔄 Reset thống kê local (không mất Coinz) (Admin only)")
     @app_commands.describe(user="Người chơi cần reset (để trống để reset tất cả)")
     @app_commands.checks.has_permissions(administrator=True)
     async def reset_stats(
@@ -151,28 +151,86 @@ class AdminCog(commands.Cog):
         interaction: discord.Interaction,
         user: discord.User = None
     ):
-        """Admin reset thống kê"""
+        """Admin reset thống kê local (giữ nguyên Coinz)"""
         import aiosqlite
         
         async with aiosqlite.connect(config.DATABASE_PATH) as db:
             if user:
-                # Reset 1 người
+                # Reset 1 người (chỉ xóa stats ở guild này, coinz ở guild_id=0 vẫn giữ)
                 await db.execute(
                     "DELETE FROM player_stats WHERE user_id = ? AND guild_id = ?",
                     (user.id, interaction.guild_id)
                 )
-                message = f"✅ Đã reset thống kê của {user.mention}!"
+                message = f"✅ Đã reset thống kê game của {user.mention} trong server này (Coinz vẫn giữ nguyên)!"
             else:
                 # Reset tất cả
                 await db.execute(
                     "DELETE FROM player_stats WHERE guild_id = ?",
                     (interaction.guild_id,)
                 )
-                message = "✅ Đã reset toàn bộ thống kê server!"
+                message = "✅ Đã reset toàn bộ thống kê game trong server này (Coinz vẫn giữ nguyên)!"
             
             await db.commit()
         
         await interaction.response.send_message(message, ephemeral=True)
+
+    @app_commands.command(name="reset-coinz", description="💸 Reset toàn bộ Coinz về 0 (Admin only)")
+    @app_commands.describe(user="Người chơi cần reset coinz (để trống để reset tất cả mọi người!)")
+    @app_commands.checks.has_permissions(administrator=True)
+    async def reset_coinz(
+        self,
+        interaction: discord.Interaction,
+        user: discord.User = None
+    ):
+        """Admin reset coinz về 0"""
+        import aiosqlite
+        
+        # Confirm action? For now just execute.
+        
+        async with aiosqlite.connect(config.DATABASE_PATH) as db:
+            if user:
+                # Set coinz = 0 for user (guild_id = 0)
+                await db.execute(
+                    "UPDATE player_stats SET total_points = 0 WHERE user_id = ? AND guild_id = 0",
+                    (user.id,)
+                )
+                message = f"✅ Đã reset ví Coinz của {user.mention} về 0!"
+            else:
+                # Reset ALL Global Coinz
+                await db.execute(
+                    "UPDATE player_stats SET total_points = 0 WHERE guild_id = 0"
+                )
+                message = "✅ Đã reset ví Coinz của TẤT CẢ người chơi về 0!"
+                
+            await db.commit()
+            
+        await interaction.response.send_message(message, ephemeral=True)
+
+    @app_commands.command(name="remove-coinz", description="➖ Trừ coinz của người chơi (Admin only)")
+    @app_commands.describe(
+        user="Người chơi bị trừ coinz",
+        points="Số coinz cần trừ"
+    )
+    @app_commands.checks.has_permissions(administrator=True)
+    async def remove_coinz(
+        self, 
+        interaction: discord.Interaction,
+        user: discord.User,
+        points: int
+    ):
+        """Admin trừ coinz của người chơi"""
+        if points <= 0:
+            await interaction.response.send_message("❌ Số coinz trừ phải lớn hơn 0!", ephemeral=True)
+            return
+
+        # Simply add negative points using existing db method
+        # This handles concurrency better than read-modify-write here
+        await self.db.add_points(user.id, interaction.guild_id, -points)
+        
+        await interaction.response.send_message(
+            f"✅ Đã trừ **{points}** coinz của {user.mention}!",
+            ephemeral=True
+        )
 
     @app_commands.command(name="set-game-channel", description="⚙️ Cài đặt game mặc định cho kênh này")
     @app_commands.describe(game_type="Chọn loại game (để trống để xóa cài đặt)")
