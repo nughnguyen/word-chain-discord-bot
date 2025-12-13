@@ -13,8 +13,8 @@ COMMAND_PREFIX = os.getenv('COMMAND_PREFIX', '/')
 
 # Game Settings
 DEFAULT_LANGUAGE = os.getenv('DEFAULT_LANGUAGE', 'vi')
-REGISTRATION_TIMEOUT = int(os.getenv('REGISTRATION_TIMEOUT', 30))  # Thời gian đăng ký (giây)
-TURN_TIMEOUT = int(os.getenv('TURN_TIMEOUT', 30))  # Thời gian mỗi lượt (giây)
+REGISTRATION_TIMEOUT = int(os.getenv('REGISTRATION_TIMEOUT', 60))  # Thời gian đăng ký (giây)
+TURN_TIMEOUT = int(os.getenv('TURN_TIMEOUT', 45))  # Thời gian mỗi lượt (giây)
 
 # Points System
 POINTS_CORRECT = int(os.getenv('POINTS_CORRECT', 100))

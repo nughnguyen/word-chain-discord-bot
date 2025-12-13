@@ -7,6 +7,7 @@ from discord import app_commands
 import asyncio
 from typing import Optional
 import random
+import time
 
 import config
 from utils import embeds, emojis
@@ -171,9 +172,10 @@ class GameCog(commands.Cog):
                 value=f"{emojis.ROBOT} **Bot Đưa Từ - Bạn Nối**",
                 inline=False
             )
+            turn_end = int(time.time() + config.TURN_TIMEOUT)
             start_embed.add_field(
                 name=f"{emojis.TIMEOUT} Lượt Của Bạn",
-                value=f"<@{first_player_id}> - Nối từ: **{first_word.upper()}**\n⏰ {config.TURN_TIMEOUT}s",
+                value=f"<@{first_player_id}> - Nối từ: **{first_word.upper()}**\nKết thúc: <t:{turn_end}:R>",
                 inline=False
             )
         else:
@@ -188,9 +190,10 @@ class GameCog(commands.Cog):
                 value=order_text,
                 inline=False
             )
+            turn_end = int(time.time() + config.TURN_TIMEOUT)
             start_embed.add_field(
                 name=f"{emojis.TIMEOUT} Lượt Hiện Tại",
-                value=f"<@{first_player_id}> - ⏰ {config.TURN_TIMEOUT}s",
+                value=f"<@{first_player_id}> - Kết thúc: <t:{turn_end}:R>",
                 inline=False
             )
         
@@ -527,6 +530,7 @@ class GameCog(commands.Cog):
             )
             
             # Bot announces new word
+            turn_end = int(time.time() + config.TURN_TIMEOUT)
             bot_embed = discord.Embed(
                 title=f"{emojis.ROBOT} Bot Đưa Từ Mới",
                 description=f"```{bot_word.upper()}```",
@@ -534,7 +538,7 @@ class GameCog(commands.Cog):
             )
             bot_embed.add_field(
                 name=f"⏰ Lượt Của Bạn",
-                value=f"{message.author.mention} - Hãy nối từ!\n**{config.TURN_TIMEOUT}s** để suy nghĩ",
+                value=f"{message.author.mention} - Hãy nối từ!\nKết thúc: <t:{turn_end}:R>",
                 inline=False
             )
             await message.channel.send(embed=bot_embed)
