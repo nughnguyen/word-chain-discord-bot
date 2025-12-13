@@ -83,7 +83,7 @@ def create_correct_answer_embed(player_mention: str, word: str, points: int, rea
     
     embed.add_field(
         name=f"{emojis.STAR} Coinz Nhận Được",
-        value=f"+{points:,} coinz",
+        value=f"+{points:,} coinz {emojis.ANIMATED_EMOJI_COINZ}",
         inline=True
     )
     
@@ -153,7 +153,7 @@ def create_rich_correct_answer_embed(
     # Chỉ hiện nếu có điểm hoặc bonus
     if points > 0:
         embed2 = discord.Embed(
-            title=f"📈 Cộng Coinz",
+            title=f"📈 Cộng Coinz :moneybag:",
             color=config.COLOR_SUCCESS,
             timestamp=datetime.now(timezone(timedelta(hours=7)))
         )
@@ -182,7 +182,7 @@ def create_rich_correct_answer_embed(
         
         embed2.add_field(
             name="Từ hợp lệ",
-            value=f"+{config.POINTS_CORRECT:,}",
+            value=f"+{config.POINTS_CORRECT:,} {emojis.ANIMATED_EMOJI_COINZ}",
             inline=True
         )
         
@@ -199,7 +199,7 @@ def create_rich_correct_answer_embed(
         if bonuses:
             embed2.add_field(
                 name="Tổng cộng",
-                value=f"**+{points:,}**",
+                value=f"**+{points:,}** {emojis.ANIMATED_EMOJI_COINZ}",
                 inline=False
             )
             
@@ -226,7 +226,7 @@ def create_wrong_answer_embed(player_mention: str, word: str, reason: str) -> di
     
     embed.add_field(
         name="Coinz Bị Trừ",
-        value=f"{config.POINTS_WRONG:,} coinz",
+        value=f"{config.POINTS_WRONG:,} coinz {emojis.ANIMATED_EMOJI_COINZ}",
         inline=True
     )
     
@@ -243,7 +243,7 @@ def create_timeout_embed(player_mention: str) -> discord.Embed:
     
     embed.add_field(
         name="Coinz Bị Trừ",
-        value=f"{config.POINTS_WRONG:,} coinz",
+        value=f"{config.POINTS_WRONG:,} coinz {emojis.ANIMATED_EMOJI_COINZ}",
         inline=True
     )
     
@@ -261,7 +261,7 @@ def create_game_end_embed(winner_data: Dict, total_turns: int, used_words_count:
     if winner_data:
         embed.add_field(
             name=f"{emojis.CROWN} Người Chiến Thắng",
-            value=f"<@{winner_data['user_id']}> với **{winner_data['points']:,} coinz**!",
+            value=f"<@{winner_data['user_id']}> với **{winner_data['points']:,} coinz**! {emojis.ANIMATED_EMOJI_COINZ}",
             inline=False
         )
     
@@ -312,7 +312,7 @@ def create_hint_embed(hint: str, cost: int) -> discord.Embed:
     
     embed.add_field(
         name="Chi Phí",
-        value=f"-{cost:,} coinz",
+        value=f"-{cost:,} coinz {emojis.ANIMATED_EMOJI_COINZ}",
         inline=True
     )
     
