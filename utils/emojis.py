@@ -7,6 +7,7 @@ Sử dụng Unicode emojis để tương thích với mọi server
 START = "⚔️"
 END = "🏁"
 SCROLL = "📜"
+BAR = "┃"
 
 # Responses
 CORRECT = "✅"
@@ -46,6 +47,21 @@ CELEBRATION = "🎉"
 SAD = "😢"
 LIGHTNING = "⚡"
 
+# Custom Emoji
+ANIMATED_EMOJI_CORRECT = "<a:tickmark:1449215039608459305>"
+ANIMATED_EMOJI_WRONG = "<a:wrongmark:1449214999816830986>"
+ANIMATED_EMOJI_DOT = "<a:bluedot:1375508734893363271>"
+ANIMATED_EMOJI_COINZ = "<a:cattoken:1449205470861459546>"
+ANIMATED_EMOJI_DISCORD = "<a:discord:1375511198036000899>"
+EMOJI_DISCORD = "<discord:1449212058708213850>"
+EMOJI_YOUTUBE = "<youtube:1449212122314838149>"
+EMOJI_TIKTOK = "<tiktok:1449212222747447357>"
+EMOJI_INSTAGRAM = "<instagram:1449212173673959454>"
+EMOJI_FACEBOOK = "<facebook:1449211949861830908>"
+EMOJI_INVITE = "<invite:xxxxx>"
+EMOJI_WEBSITE = "<website:xxxxx>"
+EMOJI_SUPPORT = "<support:xxxxx>"
+
 def get_rank_emoji(rank: int) -> str:
     """Trả về emoji dựa trên thứ hạng"""
     if rank == 1:
@@ -62,9 +78,9 @@ def get_rank_emoji(rank: int) -> str:
 def get_random_correct_emoji() -> str:
     """Trả về emoji ngẫu nhiên cho câu trả lời đúng"""
     import random
-    return random.choice([CORRECT, FIRE, HUNDRED, SPARKLES, LIGHTNING])
+    return random.choice([CORRECT, FIRE, HUNDRED, SPARKLES, LIGHTNING, ANIMATED_EMOJI_CORRECT, ANIMATED_EMOJI_FIRE, ANIMATED_EMOJI_HUNDRED])
 
 def get_random_wrong_emoji() -> str:
     """Trả về emoji ngẫu nhiên cho câu trả lời sai"""
     import random
-    return random.choice([WRONG, SKULL, MIND_BLOWN, SAD])
+    return random.choice([WRONG, SKULL, MIND_BLOWN, SAD, ANIMATED_EMOJI_WRONG])

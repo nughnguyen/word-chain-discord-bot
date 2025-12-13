@@ -32,6 +32,11 @@ class WordChainBot(commands.Bot):
         """Load all cogs and initialize services"""
         print("🔄 Initializing services...")
         
+        # Explicitly remove default help command to prevent conflict
+        if self.get_command('help'):
+            self.remove_command('help')
+            print("  ✅ Removed default help command")
+        
         # Initialize Dictionary API Service
         from utils.dictionary_api import init_dictionary_service
         
@@ -73,7 +78,8 @@ class WordChainBot(commands.Bot):
             'cogs.leaderboard',
             'cogs.admin',
             'cogs.vua_tieng_viet',
-            'cogs.lobby'
+            'cogs.lobby',
+            'cogs.help'
         ]
         
         for cog in cogs:
@@ -105,7 +111,7 @@ class WordChainBot(commands.Bot):
         await self.change_presence(
             activity=discord.Activity(
                 type=discord.ActivityType.playing,
-                name=f"Nối từ | /help"
+                name=f"Marble Soda | /help"
             ),
             status=discord.Status.online
         )
@@ -119,10 +125,10 @@ class WordChainBot(commands.Bot):
         
         if channel:
             embed = discord.Embed(
-                title=f"{emojis.START} Cảm ơn đã thêm Bot Nối Từ!",
+                title=f"{emojis.START} Cảm ơn đã thêm Marble Soda!",
                 description=(
-                    f"Xin chào {emojis.CELEBRATION}! Tôi là bot chơi trò nối từ đa người chơi.\n\n"
-                    f"Để bắt đầu, gõ `/start-wordchain` trong kênh text bất kỳ!\n"
+                    f"Xin chào {emojis.CELEBRATION}! Tôi là Marble Soda, có rất nhiều trò chơi thú vị.\n\n"
+                    f"Để bắt đầu, gõ `/start` trong kênh minigame tương ứng!\n"
                     f"Gõ `/help` để xem hướng dẫn chi tiết."
                 ),
                 color=config.COLOR_SUCCESS
