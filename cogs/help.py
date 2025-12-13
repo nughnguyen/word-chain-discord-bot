@@ -88,6 +88,19 @@ class HelpView(discord.ui.View):
                 inline=False
             )
 
+            # Bau Cua Info
+            embed.add_field(
+                name="🎲 **Bầu Cua Tôm Cá (Space Edition)**",
+                value=(
+                    f"• **Luật chơi**: Đặt cược vào 6 cửa (Alien, Star, Rocket, Planet, Galaxy, Comet).\n"
+                    f"• **Lệnh**:\n"
+                    f"  `/start` - Bắt đầu game tại kênh Bầu Cua\n"
+                    f"• **Cách chơi**: Dùng các nút bấm để đặt cược (Max 500k).\n"
+                    f"• **Tỷ lệ thắng**: Hoàn tiền cược + (Tiền cược x Số mặt xuất hiện)."
+                ),
+                inline=False
+            )
+
         elif choice == "Leaderboard Commands":
             embed.description = "xem bảng xếp hạng người chơi:"
             embed.add_field(
