@@ -5,6 +5,7 @@ import json
 import random
 import asyncio
 import config
+from utils import emojis
 from database.db_manager import DatabaseManager
 
 class VuaTiengVietCog(commands.Cog):
@@ -120,12 +121,21 @@ class VuaTiengVietCog(commands.Cog):
 
         embed = discord.Embed(
             title="👑 Vua Tiếng Việt", 
-            description="Sắp xếp các chữ cái sau thành từ/câu có nghĩa:", 
+            description="Sắp xếp các chữ cái sau thành từ hoặc câu có nghĩa:", 
             color=0xFFD700
         )
         embed.add_field(name="Câu hỏi", value=f"**```\n{scrambled.upper()}\n```**", inline=False)
         embed.add_field(name="Gợi ý số chữ", value=f"**{hint_text}**", inline=False)
-        embed.set_footer(text=f"Gõ câu trả lời chính xác vào kênh chat! Phần thưởng: {config.POINTS_VUA_TIENG_VIET} coinz!")
+        # Calculate potential points for display
+        if len(question) > 25:
+             reward_text = f"🔥 **SIÊU KHÓ** (>25 ký tự): **{config.POINTS_VUA_TIENG_VIET_SIEU_KHO:,}** {emojis.ANIMATED_EMOJI_COINZ}"
+        elif len(question) > 15:
+             reward_text = f"🔥 **KHÓ** (>15 ký tự): **{config.POINTS_VUA_TIENG_VIET_KHO:,}** {emojis.ANIMATED_EMOJI_COINZ}"
+        else:
+             reward_text = f"**{config.POINTS_VUA_TIENG_VIET:,}** {emojis.ANIMATED_EMOJI_COINZ}"
+        
+        embed.add_field(name="🎁 Phần Thưởng", value=reward_text, inline=False)
+        embed.set_footer(text="Gõ câu trả lời chính xác vào kênh chat!")
 
         await channel.send(embed=embed)
         
