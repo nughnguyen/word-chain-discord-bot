@@ -6,9 +6,12 @@ import urllib.parse
 import datetime
 import random
 import time
+SUPABASE_IMPORT_ERROR = None
 try:
     from supabase import create_client, Client
-except ImportError:
+except ImportError as e:
+    print(f"CRITICAL ERROR: Could not import supabase in views.py: {e}")
+    SUPABASE_IMPORT_ERROR = str(e)
     create_client = None
 
 
@@ -43,24 +46,31 @@ class DonationModal(ui.Modal):
         # Calculate Rewards and Expiry
         coinz_reward = (amount_val // 1000) * config.COINZ_PER_1000VND
         expiry_seconds = 600 # 10 minutes
-        expiry_time = datetime.datetime.now() + datetime.timedelta(seconds=expiry_seconds)
+        expiry_time = discord.utils.utcnow() + datetime.timedelta(seconds=expiry_seconds)
         expiry_timestamp = int(expiry_time.timestamp())
         
         # Insert Pending Transaction to Supabase
-        if config.SUPABASE_URL and config.SUPABASE_KEY and create_client:
-            try:
-                sb = create_client(config.SUPABASE_URL, config.SUPABASE_KEY)
-                sb.table('transactions').insert({
-                    'user_id': interaction.user.id,
-                    'amount': amount_val,
-                    'description': order_content,
-                    'status': 'pending',
-                    'created_at': datetime.datetime.now().isoformat(),
-                    'metadata': {'method': self.method}
-                }).execute()
-            except Exception as e:
-                print(f"Error creating pending txn: {e}")
-                # Fallback: Proceed without DB record (Bot will treat as new/legacy flow if webhook handles it)
+        if not (config.SUPABASE_URL and config.SUPABASE_KEY and create_client):
+             print(f"DEBUG: Supabase Config Error. URL={bool(config.SUPABASE_URL)}, Key={bool(config.SUPABASE_KEY)}, Lib={bool(create_client)}")
+             error_msg = f"❌ Lỗi hệ thống: Bot chưa tải được thư viện Supabase.\nLỗi chi tiết: `{SUPABASE_IMPORT_ERROR}`"
+             if not config.SUPABASE_KEY: error_msg += "\n(Thiếu KEY)"
+             await interaction.response.send_message(error_msg, ephemeral=True)
+             return
+
+        try:
+            sb = create_client(config.SUPABASE_URL.strip(), config.SUPABASE_KEY.strip())
+            sb.table('transactions').insert({
+                'user_id': interaction.user.id,
+                'amount': amount_val,
+                'description': order_content,
+                'status': 'pending',
+                'created_at': datetime.datetime.now().isoformat(),
+                'metadata': {'method': self.method}
+            }).execute()
+        except Exception as e:
+            print(f"Error creating pending txn: {e}")
+            await interaction.response.send_message(f"❌ Không thể tạo đơn hàng: {e}", ephemeral=True)
+            return
         
         params = {
             'amount': amount_val,
@@ -78,10 +88,10 @@ class DonationModal(ui.Modal):
             description=(
                 f"Bạn đã chọn nạp **{amount_val:,} VND** qua **{self.method}**.\n"
                 f"Sẽ nhận được: **{coinz_reward:,} Coinz** {emojis.ANIMATED_EMOJI_COINZ}\n\n"
-                f"**⚠️ LƯU Ý:**\n"
+                f"**⚠️ LƯU Ý QUAN TRỌNG:**\n"
                 f"1. Nội dung chuyển khoản: `{order_content}`\n"
-                f"2. Giao dịch hết hạn sau: <t:{expiry_timestamp}:R>\n"
-                f"3. Sau thời gian trên, nếu chuyển khoản sẽ **KHÔNG ĐƯỢC TÍNH**."
+                f"2. Thời gian còn lại: <t:{expiry_timestamp}:R> (Hết hạn lúc <t:{expiry_timestamp}:T>)\n"
+                f"3. Nếu chuyển khoản khi hết hạn: **KHÔNG ĐƯỢC TÍNH** & **KHÔNG CHỊU TRÁCH NHIỆM**."
             ),
             color=config.COLOR_INFO,
             timestamp=datetime.datetime.now()

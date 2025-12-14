@@ -6,7 +6,8 @@ from utils.views import DonationView
 from utils import emojis
 try:
     from supabase import create_client, Client
-except ImportError:
+except ImportError as e:
+    print(f"CRITICAL ERROR: Could not import supabase in donation.py: {e}")
     create_client = None
 
 class Donation(commands.Cog):
