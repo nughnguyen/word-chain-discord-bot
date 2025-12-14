@@ -103,6 +103,7 @@ class VuaTiengVietCog(commands.Cog):
             return
 
         question = random.choice(self.questions)
+        print(f"[Vua Tiếng Việt] Answer: {question}")
         scrambled = self.shuffle_word(question)
         
         # Retry shuffle if it happens to match original
@@ -221,9 +222,9 @@ class VuaTiengVietCog(commands.Cog):
             embed.add_field(name="Phần thưởng", value=f"{points:,} coinz {emojis.ANIMATED_EMOJI_COINZ}\n(Trừ gợi ý: -{current_base_points - points:,} coinz {emojis.ANIMATED_EMOJI_COINZ})", inline=False)
             
             if len(correct_answer) > 25:
-               embed.set_footer(text=f"🔥 CÂU HỎI *SIÊU KHÓ* > 25 KÝ TỰ: x10 QUỸ THƯỞNG ({config.POINTS_VUA_TIENG_VIET_SIEU_KHO:,} coinz {emojis.ANIMATED_EMOJI_COINZ})")
+               embed.set_footer(text=f"🔥> 25 KÝ TỰ: x10 QUỸ THƯỞNG ({config.POINTS_VUA_TIENG_VIET_SIEU_KHO:,} coinz!)")
             elif len(correct_answer) > 15:
-               embed.set_footer(text=f"🔥 CÂU HỎI *KHÓ* > 15 KÝ TỰ: QUỸ THƯỞNG {config.POINTS_VUA_TIENG_VIET_KHO:,} coinz {emojis.ANIMATED_EMOJI_COINZ}")
+               embed.set_footer(text=f"🔥> 15 KÝ TỰ: QUỸ THƯỞNG {config.POINTS_VUA_TIENG_VIET_KHO:,} coinz!")
             else:
                embed.set_footer(text=f"Chuẩn bị câu tiếp theo trong 5 giây...")
             
