@@ -189,4 +189,62 @@ class DonationView(ui.View):
     async def vietqr_button(self, interaction: discord.Interaction, button: ui.Button):
         await interaction.response.send_modal(DonationModal(method="VIETQR"))
 
+class RegistrationView(ui.View):
+    def __init__(self, host_id: int, timeout: float):
+        super().__init__(timeout=timeout)
+        self.host_id = host_id
+        self.registered_players = {host_id} # Host auto-registered
+        self.game_started = False
+
+    @ui.button(label="📝 Đăng Ký", style=discord.ButtonStyle.success, emoji="✅")
+    async def join_button(self, interaction: discord.Interaction, button: ui.Button):
+        if interaction.user.id in self.registered_players:
+            await interaction.response.send_message("Bạn đã đăng ký rồi!", ephemeral=True)
+            return
+        
+        self.registered_players.add(interaction.user.id)
+        await self.update_embed(interaction)
+        await interaction.response.send_message("Đăng ký thành công!", ephemeral=True)
+
+    @ui.button(label="❌ Hủy", style=discord.ButtonStyle.secondary, emoji="🚪")
+    async def leave_button(self, interaction: discord.Interaction, button: ui.Button):
+        if interaction.user.id not in self.registered_players:
+            await interaction.response.send_message("Bạn chưa đăng ký!", ephemeral=True)
+            return
+        
+        if interaction.user.id == self.host_id:
+             await interaction.response.send_message("Chủ phòng không thể hủy đăng ký! Hãy đợi hết giờ hoặc bắt đầu solo.", ephemeral=True)
+             return
+
+        self.registered_players.remove(interaction.user.id)
+        await self.update_embed(interaction)
+        await interaction.response.send_message("Đã hủy đăng ký!", ephemeral=True)
+
+    @ui.button(label="🎮 Bắt Đầu", style=discord.ButtonStyle.primary, emoji="🚀")
+    async def start_button(self, interaction: discord.Interaction, button: ui.Button):
+        if interaction.user.id != self.host_id:
+            await interaction.response.send_message("Chỉ chủ phòng mới được bắt đầu game!", ephemeral=True)
+            return
+        
+        self.game_started = True
+        self.stop()
+        await interaction.response.defer()
+
+    async def update_embed(self, interaction: discord.Interaction):
+        try:
+            embed = interaction.message.embeds[0]
+            # Format player list nicely
+            players = []
+            for uid in self.registered_players:
+                players.append(f"<@{uid}>")
+                
+            player_list_str = "\n".join(players)
+            
+            # Field 0 is assumed to be the player list based on game.py
+            embed.set_field_at(0, name=f"👥 Đã Đăng Ký ({len(self.registered_players)} người)", value=player_list_str, inline=False)
+            
+            await interaction.message.edit(embed=embed)
+        except Exception as e:
+            print(f"Error updating registration embed: {e}")
+
 

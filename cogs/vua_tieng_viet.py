@@ -206,9 +206,9 @@ class VuaTiengVietCog(commands.Cog):
             
             # Determine Base Points based on length
             if len(correct_answer) > 25:
-                current_base_points = config.POINTS_VUA_TIENG_VIET * 10 # 50,000
+                current_base_points = config.POINTS_VUA_TIENG_VIET_SIEU_KHO
             elif len(correct_answer) > 15:
-                current_base_points = 10000
+                current_base_points = config.POINTS_VUA_TIENG_VIET_KHO
             else:
                 current_base_points = config.POINTS_VUA_TIENG_VIET
             
@@ -222,9 +222,9 @@ class VuaTiengVietCog(commands.Cog):
             embed.add_field(name="Phần thưởng", value=f"{points:,} coinz {emojis.ANIMATED_EMOJI_COINZ}\n(Trừ gợi ý: -{current_base_points - points:,} coinz {emojis.ANIMATED_EMOJI_COINZ})", inline=False)
             
             if len(correct_answer) > 25:
-               embed.set_footer(text=f"🔥> 25 KÝ TỰ: x10 QUỸ THƯỞNG ({config.POINTS_VUA_TIENG_VIET_SIEU_KHO:,} coinz!)")
+               embed.set_footer(text=f"🔥 > 25 KÝ TỰ: SIÊU TO KHỔNG LỒ ({config.POINTS_VUA_TIENG_VIET_SIEU_KHO:,} coinz!)")
             elif len(correct_answer) > 15:
-               embed.set_footer(text=f"🔥> 15 KÝ TỰ: QUỸ THƯỞNG {config.POINTS_VUA_TIENG_VIET_KHO:,} coinz!")
+               embed.set_footer(text=f"🔥 > 15 KÝ TỰ: THƯỞNG LỚN ({config.POINTS_VUA_TIENG_VIET_KHO:,} coinz!)")
             else:
                embed.set_footer(text=f"Chuẩn bị câu tiếp theo trong 5 giây...")
             

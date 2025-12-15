@@ -146,15 +146,17 @@ class AdminCog(commands.Cog):
             ephemeral=True
         )
     
-    @app_commands.command(name="reset-stats", description="🔄 Reset toàn bộ thống kê game (giữ lại Coinz) (Admin only)")
+    @app_commands.command(name="reset-stats", description="🔄 Reset toàn bộ thống kê game (giữ lại Coinz) (Owner only)")
     @app_commands.describe(user="Người chơi cần reset (để trống để reset tất cả)")
-    @app_commands.checks.has_permissions(administrator=True)
     async def reset_stats(
         self, 
         interaction: discord.Interaction,
         user: discord.User = None
     ):
-        """Admin reset thống kê game (giữ nguyên Coinz)"""
+        """Owner reset thống kê game (giữ nguyên Coinz)"""
+        if interaction.user.id != 561443914062757908:
+             await interaction.response.send_message("❌ Chỉ có **Owner Bot** mới được dùng lệnh này!", ephemeral=True)
+             return
         import aiosqlite
         
         async with aiosqlite.connect(config.DATABASE_PATH) as db:
@@ -178,7 +180,7 @@ class AdminCog(commands.Cog):
                     WHERE user_id = ? AND guild_id = 0
                 """, (user.id,))
                 
-                message = f"✅ Đã reset toàn bộ thống kê game, túi đồ câu cá của {user.mention} (Coinz được bảo toàn)!"
+                message = f"✅ Đã reset toàn bộ thống kê game, túi đồ câu cá của {user.mention} (Coinz {emojis.ANIMATED_EMOJI_COINZ} được bảo toàn)!"
             else:
                 # Reset tất cả mọi người (Nguy hiểm, nhưng theo yêu cầu)
                 await db.execute("DELETE FROM fishing_inventory")
@@ -192,7 +194,7 @@ class AdminCog(commands.Cog):
                     WHERE guild_id = 0
                 """)
                 
-                message = "✅ Đã reset thống kê game của TẤT CẢ thành viên (Coinz được bảo toàn)!"
+                message = "✅ Đã reset thống kê game của TẤT CẢ thành viên (Coinz {emojis.ANIMATED_EMOJI_COINZ} được bảo toàn)!"
             
             await db.commit()
         
@@ -221,13 +223,13 @@ class AdminCog(commands.Cog):
                     "UPDATE player_stats SET total_points = 0 WHERE user_id = ? AND guild_id = 0",
                     (user.id,)
                 )
-                message = f"✅ Đã reset ví Coinz của {user.mention} về 0!"
+                message = f"✅ Đã reset ví Coinz {emojis.ANIMATED_EMOJI_COINZ} của {user.mention} về 0!"
             else:
                 # Reset ALL Global Coinz
                 await db.execute(
                     "UPDATE player_stats SET total_points = 0 WHERE guild_id = 0"
                 )
-                message = "✅ Đã reset ví Coinz của TẤT CẢ người chơi về 0!"
+                message = "✅ Đã reset ví Coinz {emojis.ANIMATED_EMOJI_COINZ} của TẤT CẢ người chơi về 0!"
                 
             await db.commit()
             

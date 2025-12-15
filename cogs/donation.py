@@ -55,6 +55,31 @@ class Donation(commands.Cog):
                     # Add points using shared database
                     if hasattr(self.bot, 'db'):
                         await self.bot.db.add_points(user_id, 0, coinz)
+                        
+                        # Check for Donator Rod reward (>= 10k VND)
+                        if amount >= 10000:
+                            try:
+                                # Safe import or string usage
+                                rod_key = "Donator Rod"
+                                data = await self.bot.db.get_fishing_data(user_id)
+                                inv = data.get("inventory", {})
+                                
+                                # Ensure 'rods' list exists
+                                if "rods" not in inv: 
+                                    inv["rods"] = ["Plastic Rod"] # Default
+                                    
+                                if rod_key not in inv["rods"]:
+                                    inv["rods"].append(rod_key)
+                                    await self.bot.db.update_fishing_data(user_id, inventory=inv)
+                                    
+                                    # Notify
+                                    try:
+                                        u = await self.bot.fetch_user(user_id)
+                                        await u.send(f"🎣 **QUÀ TẶNG:** Bạn đã nhận được **Cần Nhà Tài Trợ** (Donator Rod) nhờ donate > 10k!")
+                                    except:
+                                        pass
+                            except Exception as e:
+                                print(f"Error giving Donator Rod: {e}")
                     
                     # Notify User
                     try:
@@ -186,18 +211,19 @@ class Donation(commands.Cog):
     @app_commands.command(name="donate", description="Ủng hộ bot hoặc nạp Coinz")
     async def donate(self, interaction: discord.Interaction):
         embed = discord.Embed(
-            title="💎 NẠP COINZ - ỦNG HỘ SERVER",
+            title=f"💎 NẠP COINZ | ỦNG HỘ SERVER",
             description=(
-                "Chào mừng bạn đến với hệ thống nạp Coinz tự động 24/7!\n\n"
-                "**🎁 QUYỀN LỢI KHI NẠP COINZ:**\n"
+                f"Chào mừng bạn đến với hệ thống nạp Coinz tự động 24/7!\n\n"
+                f"**🎁 QUYỀN LỢI KHI NẠP COINZ**\n"
                 "✨ Tham gia các minigame giải trí\n"
                 "✨ Đua Top Tỷ Phú Server\n"
                 "✨ Mua các vật phẩm/quyền lợi (sắp ra mắt)\n"
                 "❤️ Góp phần duy trì Bot hoạt động ổn định\n\n"
                 "**💰 TỶ GIÁ QUY ĐỔI:**\n"
                 f"💵 `1,000 VND` = `{config.COINZ_PER_1000VND:,} Coinz` {emojis.ANIMATED_EMOJI_COINZ}\n"
-                f"🔥 **Khuyến mãi:** Tặng thêm 10% khi nạp trên 50k!\n\n"
-                "**� PHƯƠNG THỨC THANH TOÁN:**\n"
+                f"🔥 **Khuyến mãi:** Tặng thêm 10% khi nạp trên 50k!\n"
+                f"🎣 **Đặc biệt:** Nạp tối thiểu **10,000 VND** nhận ngay **Cần Nhà Tài Trợ** (Donator Rod)!\n\n"
+                "**💳 PHƯƠNG THỨC THANH TOÁN:**\n"
                 "1. **MOMO** - Ví điện tử thông dụng\n"
                 "2. **VNPAY** - Quét mã tiện lợi\n"
                 "3. **VIETQR** - Chuyển khoản mọi ngân hàng (MB, VCB, OCB...)\n\n"
