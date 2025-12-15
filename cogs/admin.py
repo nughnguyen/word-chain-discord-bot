@@ -237,7 +237,8 @@ class AdminCog(commands.Cog):
     @app_commands.choices(game_type=[
         app_commands.Choice(name="🔤 Nối Từ (Word Chain)", value="wordchain"),
         app_commands.Choice(name="👑 Vua Tiếng Việt", value="vuatiengviet"),
-        app_commands.Choice(name="🎲 Bầu Cua Tôm Cá", value="baucuatomca"),
+        app_commands.Choice(name="🎲 Bầu Cua Tôm Cá", value="baucua"),
+        app_commands.Choice(name="🧩 Xếp Hình (Tetris)", value="xephinh"),
     ])
     @app_commands.checks.has_permissions(administrator=True)
     async def set_game_channel(self, interaction: discord.Interaction, game_type: app_commands.Choice[str] = None):
@@ -281,6 +282,13 @@ class AdminCog(commands.Cog):
         """Đặt kênh bầu cua"""
         await self.db.set_channel_config(interaction.channel_id, interaction.guild_id, "baucua")
         await interaction.response.send_message(f"✅ Đã đặt kênh này làm kênh chuyên **Bầu Cua**!\nGõ `/start` để chơi ngay.", ephemeral=True)
+
+    @app_commands.command(name="kenh-xep-hinh", description="⚙️ Đặt kênh này làm kênh Xếp Hình")
+    @app_commands.checks.has_permissions(administrator=True)
+    async def set_xephinh_channel(self, interaction: discord.Interaction):
+        """Đặt kênh xếp hình"""
+        await self.db.set_channel_config(interaction.channel_id, interaction.guild_id, "xephinh")
+        await interaction.response.send_message(f"✅ Đã đặt kênh này làm kênh chuyên **Xếp Hình (Tetris)**!\nGõ `/start` để chơi ngay.", ephemeral=True)
     
 
 

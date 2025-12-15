@@ -84,7 +84,8 @@ class WordChainBot(commands.Bot):
             'cogs.bau_cua',
             'cogs.lobby',
             'cogs.help',
-            'cogs.donation'
+            'cogs.donation',
+            'cogs.xep_hinh'
         ]
         
         for cog in cogs:

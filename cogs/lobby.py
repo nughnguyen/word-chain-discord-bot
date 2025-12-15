@@ -54,6 +54,13 @@ class LobbyCog(commands.Cog):
             else:
                  await interaction.response.send_message("❌ Lỗi: Game Bầu Cua chưa được load.", ephemeral=True)
 
+        elif game_type == "xephinh":
+            xh_cog = self.bot.get_cog("XepHinhCog")
+            if xh_cog:
+                 await xh_cog.start_game(interaction)
+            else:
+                 await interaction.response.send_message("❌ Lỗi: Game Xếp Hình chưa được load.", ephemeral=True)
+
         else:
              await interaction.response.send_message("❌ Loại game không hợp lệ.", ephemeral=True)
 
@@ -93,6 +100,13 @@ class LobbyCog(commands.Cog):
             bc_cog = self.bot.get_cog("BauCuaCog")
             if bc_cog:
                  await bc_cog.stop_game(interaction)
+            else:
+                 await interaction.response.send_message("❌ Lỗi cog.", ephemeral=True)
+
+        elif game_type == "xephinh":
+            xh_cog = self.bot.get_cog("XepHinhCog")
+            if xh_cog:
+                 await xh_cog.stop_game(interaction)
             else:
                  await interaction.response.send_message("❌ Lỗi cog.", ephemeral=True)
 

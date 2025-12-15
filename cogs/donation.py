@@ -44,6 +44,8 @@ class Donation(commands.Cog):
                     user_id = int(txn.get('user_id', 0))
                     amount = int(txn.get('amount', 0))
                     
+                    order_code = txn.get('description', 'N/A')
+                    
                     if not user_id or not amount:
                         continue
 
@@ -62,6 +64,7 @@ class Donation(commands.Cog):
                             description=(
                                 f"Cảm ơn bạn đã ủng hộ!\n"
                                 f"Đơn hàng: `{txn_id}`\n"
+                                f"Nội dung: `{order_code}`\n"
                                 f"Số nhận: **{coinz:,} Coinz** {emojis.ANIMATED_EMOJI_COINZ}"
                             ),
                             color=config.COLOR_SUCCESS
@@ -199,7 +202,7 @@ class Donation(commands.Cog):
         )
         embed.set_thumbnail(url="https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExbmZpbHRmaXZ4b3J5YWR4aGZ4eXF4aGZ4eXF4aGZ4eXF4aGZ4eXF4aGZ4eSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9cw/LdOyjZ7io5Msw/giphy.gif")
         embed.set_footer(text="Hệ thống xử lý tự động trong 1-3 phút • Cảm ơn bạn đã ủng hộ!")
-        embed.set_image(url="https://media.discordapp.net/attachments/1110839734893363271/1175511198036000899/line_rainbow.gif") # Decorative line if desired, or remove if specific aesthetic wasn't provided earlier, but "hấp dẫn" implies visual appeal.
+        embed.set_image(url="https://cdn.discordapp.com/attachments/1305556786304127097/1327687391267389632/thenoicez.gif?ex=6940eafd&is=693f997d&hm=332f39b7a027ecfebdead2cd326f57c1502020fff8922b78c8fdb623fa49a43b&") # Decorative line if desired, or remove if specific aesthetic wasn't provided earlier, but "hấp dẫn" implies visual appeal.
         
         await interaction.response.send_message(embed=embed, view=DonationView())
 

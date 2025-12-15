@@ -90,6 +90,7 @@ class HelpView(discord.ui.View):
                 value="• Spam, cheat sẽ bị reset coinz hoặc ban khỏi hệ thống.",
                 inline=False
             )
+            embed.set_image(url="https://cdn.discordapp.com/attachments/1305556786304127097/1327687391267389632/thenoicez.gif?ex=6940eafd&is=693f997d&hm=332f39b7a027ecfebdead2cd326f57c1502020fff8922b78c8fdb623fa49a43b&")
 
         elif choice == "Games Commands":
             embed.description = "Hướng dẫn chi tiết các trò chơi:"
@@ -141,6 +142,7 @@ class HelpView(discord.ui.View):
                 ),
                 inline=False
             )
+            embed.set_image(url="https://cdn.discordapp.com/attachments/1305556786304127097/1327687391267389632/thenoicez.gif?ex=6940eafd&is=693f997d&hm=332f39b7a027ecfebdead2cd326f57c1502020fff8922b78c8fdb623fa49a43b&")
 
         elif choice == "Leaderboard Commands":
             embed.description = "Xem bảng xếp hạng người chơi:"
@@ -152,7 +154,8 @@ class HelpView(discord.ui.View):
                 ),
                 inline=False
             )
-            
+            embed.set_image(url="https://cdn.discordapp.com/attachments/1305556786304127097/1327687391267389632/thenoicez.gif?ex=6940eafd&is=693f997d&hm=332f39b7a027ecfebdead2cd326f57c1502020fff8922b78c8fdb623fa49a43b&")            
+        
         elif choice == "Admin Commands":
             embed.description = "Các lệnh quản lý (chỉ dành cho Admin):"
             embed.add_field(
@@ -177,7 +180,8 @@ class HelpView(discord.ui.View):
                 ),
                 inline=False
             )
-            
+            embed.set_image(url="https://cdn.discordapp.com/attachments/1305556786304127097/1327687391267389632/thenoicez.gif?ex=6940eafd&is=693f997d&hm=332f39b7a027ecfebdead2cd326f57c1502020fff8922b78c8fdb623fa49a43b&")            
+      
         elif choice == "Utility Commands":
             embed.description = "Thông tin khác về Bot:"
             embed.add_field(
@@ -189,6 +193,7 @@ class HelpView(discord.ui.View):
                 ),
                 inline=False
             )
+            embed.set_image(url="https://cdn.discordapp.com/attachments/1305556786304127097/1327687391267389632/thenoicez.gif?ex=6940eafd&is=693f997d&hm=332f39b7a027ecfebdead2cd326f57c1502020fff8922b78c8fdb623fa49a43b&")
 
         elif choice == "Donation":
             embed.title = "💎 NẠP COINZ - ỦNG HỘ SERVER"
@@ -209,9 +214,8 @@ class HelpView(discord.ui.View):
                 "👇 **Chọn phương thức thanh toán bên dưới để bắt đầu:**"
             )
             embed.color = config.COLOR_GOLD
-            embed.set_thumbnail(url="https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExbmZpbHRmaXZ4b3J5YWR4aGZ4eXF4aGZ4eXF4aGZ4eXF4aGZ4eXF4aGZ4eSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9cw/LdOyjZ7io5Msw/giphy.gif")
             embed.set_footer(text="Hệ thống xử lý tự động trong 1-3 phút • Cảm ơn bạn đã ủng hộ!")
-            embed.set_image(url="https://media.discordapp.net/attachments/1110839734893363271/1175511198036000899/line_rainbow.gif")
+            embed.set_image(url="https://cdn.discordapp.com/attachments/1305556786304127097/1327687391267389632/thenoicez.gif?ex=6940eafd&is=693f997d&hm=332f39b7a027ecfebdead2cd326f57c1502020fff8922b78c8fdb623fa49a43b&")
             await interaction.response.send_message(embed=embed, view=DonationView(), ephemeral=True)
             return
             
@@ -273,6 +277,7 @@ class Help(commands.Cog):
         
         # Image banner if available in config or user preference, otherwise skip or add empty field
         
+        embed.set_image(url="https://cdn.discordapp.com/attachments/1305556786304127097/1327687391267389632/thenoicez.gif?ex=6940eafd&is=693f997d&hm=332f39b7a027ecfebdead2cd326f57c1502020fff8922b78c8fdb623fa49a43b&")
         embed.set_footer(text=f"Requested by {ctx.author.name}", icon_url=ctx.author.avatar.url if ctx.author.avatar else None)
         
         view = HelpView(self.bot)

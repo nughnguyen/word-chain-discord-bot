@@ -1,4 +1,5 @@
 import discord
+import asyncio
 from discord import ui
 import config
 from utils import emojis
@@ -104,6 +105,73 @@ class DonationModal(ui.Modal):
         view.add_item(ui.Button(label="THANH TOÁN NGAY", url=payment_url, style=discord.ButtonStyle.link, emoji="💸"))
         
         await interaction.response.send_message(embed=embed, view=view, ephemeral=True)
+        
+        # Start background task to monitor transaction status
+        asyncio.create_task(monitor_transaction(interaction, order_content, expiry_seconds))
+
+async def monitor_transaction(interaction: discord.Interaction, order_code: str, duration: int):
+    # Initialize Supabase client for this task
+    sb = None
+    if config.SUPABASE_URL and config.SUPABASE_KEY and create_client:
+        try:
+            sb = create_client(config.SUPABASE_URL, config.SUPABASE_KEY)
+        except Exception as e:
+            print(f"Error initializing Supabase in monitor: {e}")
+
+    end_time = time.time() + duration
+    
+    while time.time() < end_time:
+        if sb:
+            try:
+                # Check status
+                response = sb.table('transactions').select("status, amount").eq('description', order_code).execute()
+                if response.data:
+                    data = response.data[0]
+                    status = data.get('status')
+                    
+                    if status == 'success':
+                        amount = data.get('amount', 0)
+                        coinz = (amount // 1000) * config.COINZ_PER_1000VND
+                        
+                        embed = discord.Embed(
+                            title=f"{emojis.TADA_LEFT} THANH TOÁN THÀNH CÔNG {emojis.TADA_RIGHT}",
+                            description=(
+                                f"Cảm ơn bạn đã ủng hộ!\n"
+                                f"Đơn hàng: `{order_code}`\n"
+                                f"Đã nạp: **{amount:,} VND**\n"
+                                f"Nhận được: **{coinz:,} Coinz** {emojis.ANIMATED_EMOJI_COINZ}"
+                            ),
+                            color=config.COLOR_SUCCESS,
+                            timestamp=discord.utils.utcnow()
+                        )
+                        embed.set_footer(text="Giao dịch hoàn tất.")
+                        embed.set_thumbnail(url="https://media.discordapp.net/attachments/1110839734893363271/1175511198036000899/line_rainbow.gif") # Re-using a celebratory gif if appropriate or just keeping it clean
+                        
+                        # Remove buttons
+                        await interaction.edit_original_response(embed=embed, view=None)
+                        return
+            except Exception as e:
+                print(f"Error checking transaction status: {e}")
+        
+        await asyncio.sleep(5) # Check every 5 seconds
+
+    # If loop finishes without success -> Expire
+    try:
+        embed = discord.Embed(
+            title="⚠️ GIAO DỊCH HẾT HẠN",
+            description=(
+                f"Mã đơn: `{order_code}`\n"
+                f"Đã quá thời gian thanh toán (10 phút).\n"
+                f"Giao dịch này không còn hiệu lực. Vui lòng tạo lệnh mới."
+            ),
+            color=discord.Color.red(),
+            timestamp=discord.utils.utcnow()
+        )
+        embed.set_footer(text="Giao dịch đã bị hủy tự động.")
+        
+        await interaction.edit_original_response(embed=embed, view=None)
+    except Exception as e:
+        print(f"Error expiring transaction embed: {e}")
 
 class DonationView(ui.View):
     def __init__(self):
