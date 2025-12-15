@@ -559,21 +559,38 @@ class DatabaseManager:
                     return {
                         'rod_type': 'Plastic Rod',
                         'boat_type': 'None',
-                        'inventory': {},
+                        'inventory': {'fish': {}, 'baits': {}}, # Structure: fish: {name: {count, total_value}}, baits: {name: count}
                         'upgrades': {},
-                        'stats': {'xp': 0, 'level': 1, 'money': 0}, # stats.money is separate from global points? Or sync?
-                        # The original script had its own money system.
-                        # But we should probably use the global points system for economy consistency.
-                        # Let's assume we use global points, but maybe stats tracks fishing-specific things like boosts.
+                        'stats': {
+                            'xp': 0, 
+                            'level': 1, 
+                            'money': 0,
+                            'current_biome': 'Lake',
+                            'unlocked_biomes': ['Lake'],
+                            'current_bait': None
+                        },
                         'last_fished': None
                     }
                 
+                # Parse existing data and merge with defaults to ensure new keys exist
+                inventory = json.loads(row[2])
+                if 'fish' not in inventory: # Migration for old inventory format
+                    old_inv = inventory.copy()
+                    inventory = {'fish': {}, 'baits': {}}
+                    # We won't migrate old items as the system changed completely, or we treat them as generic
+                
+                stats = json.loads(row[4])
+                # Ensure defaults exists
+                if 'current_biome' not in stats: stats['current_biome'] = 'Lake'
+                if 'unlocked_biomes' not in stats: stats['unlocked_biomes'] = ['Lake']
+                if 'current_bait' not in stats: stats['current_bait'] = None
+
                 return {
                     'rod_type': row[0],
                     'boat_type': row[1],
-                    'inventory': json.loads(row[2]),
+                    'inventory': inventory,
                     'upgrades': json.loads(row[3]),
-                    'stats': json.loads(row[4]),
+                    'stats': stats,
                     'last_fished': row[5]
                 }
 

@@ -9,115 +9,165 @@ import config
 from utils import emojis
 from database.db_manager import DatabaseManager
 
-# --- CONSTANTS ---
+# --- CONSTANTS & CONFIGURATION ---
 
-FISH_TYPES = [
-    "Fish", "Salmon", "Cod", "Tropical Fish", "Pufferfish", 
-    "Fiery Pufferfish", "Volcanic Fish", "Turtle", "Squid", "Dolphin"
-]
+RARITIES = {
+    "Common":    {"color": 0x95A5A6, "chance": 50, "mul": 1.0, "emoji": "⚪"},
+    "Uncommon":  {"color": 0x2ECC71, "chance": 30, "mul": 1.5, "emoji": "🟢"},
+    "Rare":      {"color": 0x3498DB, "chance": 12, "mul": 3.0, "emoji": "🔵"},
+    "Epic":      {"color": 0x9B59B6, "chance": 6,  "mul": 8.0, "emoji": "🟣"},
+    "Legendary": {"color": 0xF1C40F, "chance": 1.8, "mul": 20.0, "emoji": "🟡"},
+    "Mythical":  {"color": 0xE74C3C, "chance": 0.2, "mul": 100.0, "emoji": "🔴"}
+}
 
-FISH_DATA = {
-    "Fish":             {"value": 1,    "xp": 0.25, "min_quality": 1},
-    "Salmon":           {"value": 3,    "xp": 1,    "min_quality": 2},
-    "Cod":              {"value": 10,   "xp": 2,    "min_quality": 3},
-    "Tropical Fish":    {"value": 30,   "xp": 5,    "min_quality": 4},
-    "Pufferfish":       {"value": 80,   "xp": 10,   "min_quality": 5},
-    "Fiery Pufferfish": {"value": 200,  "xp": 20,   "min_quality": 6},
-    "Volcanic Fish":    {"value": 480,  "xp": 40,   "min_quality": 7},
-    "Turtle":           {"value": 1000, "xp": 75,   "min_quality": 8},
-    "Squid":            {"value": 2500, "xp": 120,  "min_quality": 9},
-    "Dolphin":          {"value": 6000, "xp": 150,  "min_quality": 10}
+BIOMES = {
+    "Lake": {
+        "name": "Hồ Nước",
+        "desc": "Nơi bắt đầu yên bình.",
+        "req_xp": 0,
+        "req_money": 0,
+        "emoji": "🏞️",
+        "fish": [
+            {"name": "Cá Chép", "base_value": 5, "min_size": 10, "max_size": 30},
+            {"name": "Cá Rô", "base_value": 8, "min_size": 5, "max_size": 15},
+            {"name": "Cá Trê", "base_value": 12, "min_size": 20, "max_size": 50},
+            {"name": "Rùa Hồ", "base_value": 50, "min_size": 20, "max_size": 40}, # Rare+
+        ]
+    },
+    "River": {
+        "name": "Dòng Sông",
+        "desc": "Dòng nước chảy xiết, cá khỏe hơn.",
+        "req_xp": 500,
+        "req_money": 5000,
+        "emoji": "uWQ",
+        "fish": [
+            {"name": "Cá Hồi", "base_value": 20, "min_size": 30, "max_size": 80},
+            {"name": "Cá Lăng", "base_value": 35, "min_size": 40, "max_size": 100},
+            {"name": "Ba Ba", "base_value": 80, "min_size": 20, "max_size": 50},
+            {"name": "Cá Sấu Con", "base_value": 200, "min_size": 50, "max_size": 150},
+        ]
+    },
+    "Ocean": {
+        "name": "Đại Dương",
+        "desc": "Biển cả mênh mông với những loài cá lớn.",
+        "req_xp": 2000,
+        "req_money": 20000,
+        "emoji": "🌊",
+        "fish": [
+            {"name": "Cá Ngừ", "base_value": 100, "min_size": 50, "max_size": 200},
+            {"name": "Cá Thu", "base_value": 80, "min_size": 40, "max_size": 120},
+            {"name": "Mực Ống", "base_value": 150, "min_size": 20, "max_size": 60},
+            {"name": "Cá Mập", "base_value": 500, "min_size": 200, "max_size": 500},
+        ]
+    },
+    "Deep Sea": {
+        "name": "Biển Sâu",
+        "desc": "Vùng nước tối tăm áp lực cao.",
+        "req_xp": 10000,
+        "req_money": 50000,
+        "emoji": "🦑",
+        "fish": [
+            {"name": "Cá Lồng Đèn", "base_value": 300, "min_size": 10, "max_size": 40},
+            {"name": "Cá Mặt Trăng", "base_value": 800, "min_size": 100, "max_size": 300},
+            {"name": "Mực Khổng Lồ", "base_value": 1500, "min_size": 300, "max_size": 1000},
+        ]
+    },
+    "Volcano": {
+        "name": "Núi Lửa",
+        "desc": "Vùng nước sôi sục, chỉ những loài cá huyền thoại.",
+        "req_xp": 50000,
+        "req_money": 200000,
+        "emoji": "🌋",
+        "fish": [
+            {"name": "Cá Dung Nham", "base_value": 2000, "min_size": 50, "max_size": 150},
+            {"name": "Rồng Lửa", "base_value": 5000, "min_size": 200, "max_size": 800},
+            {"name": "Phượng Hoàng Nước", "base_value": 10000, "min_size": 100, "max_size": 300},
+        ]
+    }
 }
 
 RODS = {
-    "Plastic Rod":    {"price": 0,       "mul_qty": 1.1,  "add_qual": 0.3},
-    "Improved Rod":   {"price": 500,     "mul_qty": 1.15, "add_qual": 0.6},
-    "Greater Rod":    {"price": 1500,    "mul_qty": 1.25, "add_qual": 1.0},
-    "Fiberglass Rod": {"price": 3500,    "mul_qty": 1.35, "add_qual": 1.4},
-    "Lava Rod":       {"price": 7500,    "mul_qty": 1.5,  "add_qual": 1.7},
-    "Magma Rod":      {"price": 15000,   "mul_qty": 1.75, "add_qual": 2.0},
-    "Oceanic Rod":    {"price": 30000,   "mul_qty": 2.0,  "add_qual": 2.3},
-    "Aquatic Rod":    {"price": 75000,   "mul_qty": 2.5,  "add_qual": 2.6},
-    "Golden Rod":     {"price": 150000,  "mul_qty": 3.0,  "add_qual": 3.0},
-    "Treasure Rod":   {"price": 500000,  "mul_qty": 1.0,  "add_qual": 0.0, "treasure_mul": 2.0} # Special
+    "Plastic Rod":    {"price": 0,       "power": 0,   "luck": 0},
+    "Improved Rod":   {"price": 2000,    "power": 5,   "luck": 2},
+    "Glass Rod":      {"price": 10000,   "power": 10,  "luck": 5},
+    "Carbon Rod":     {"price": 50000,   "power": 20,  "luck": 10},
+    "Master Rod":     {"price": 200000,  "power": 35,  "luck": 15},
+    "Legendary Rod":  {"price": 1000000, "power": 50,  "luck": 25},
+    "Poseidon Rod":   {"price": 5000000, "power": 80,  "luck": 40},
 }
-
-# Ordered list for shop logic
 ROD_LIST = list(RODS.keys())
 
-# Upgrade costs (Simple list for "More Fish" for now, scalable later)
-UPGRADE_COSTS = {
-    "More Fish": [200, 500, 1500, 5000, 12500, 30000, 75000, 200000, 500000, 1500000]
+BAITS = {
+    "Worms":           {"price": 50,    "power": 0,  "luck": 0, "desc": "Mồi câu cơ bản."},
+    "Crickets":        {"price": 150,   "power": 2,  "luck": 1, "desc": "Thu hút cá nhỏ."},
+    "Leeches":         {"price": 500,   "power": 5,  "luck": 2, "desc": "Bám dính tốt, khó hụt."},
+    "Minnows":         {"price": 1500,  "power": 8,  "luck": 5, "desc": "Dụ cá săn mồi."},
+    "Squid":           {"price": 3000,  "power": 10, "luck": 8, "desc": "Mồi yêu thích của cá biển."},
+    "Cut Bait":        {"price": 5000,  "power": 15, "luck": 10, "desc": "Mùi tanh thu hút cá lớn."},
+    "Spinner":         {"price": 10000, "power": 20, "luck": 12, "desc": "Lấp lánh, dụ cá hiếm."},
+    "Magic Lure":      {"price": 25000, "power": 30, "luck": 20, "desc": "Có ma thuật, tăng mạnh tỉ lệ."},
+    "Golden Grub":     {"price": 50000, "power": 40, "luck": 35, "desc": "Mạ vàng, cá Legendary thích nó."},
+    "Rainbow Essence": {"price": 100000,"power": 50, "luck": 50, "desc": "Tinh hoa cầu vồng, mồi tối thượng."}
 }
 
-class ShopView(discord.ui.View):
-    def __init__(self, cog, user_id, current_rod, money):
+class FishingView(discord.ui.View):
+    def __init__(self, cog, user_id, current_biome, last_catch=None):
         super().__init__(timeout=60)
         self.cog = cog
         self.user_id = user_id
-        self.current_rod = current_rod
-        self.money = money
+        self.current_biome = current_biome
+        self.last_catch = last_catch # {name, value} of the fish just caught
         self.message = None
 
-        self.update_buttons()
-
-    def update_buttons(self):
-        self.clear_items()
-        
-        # Determine next rod
-        try:
-            curr_idx = ROD_LIST.index(self.current_rod)
-        except ValueError:
-            curr_idx = 0
-            
-        if curr_idx < len(ROD_LIST) - 1:
-            next_rod = ROD_LIST[curr_idx + 1]
-            price = RODS[next_rod]["price"]
-            can_afford = self.money >= price
-            
-            btn = discord.ui.Button(
-                label=f"Mua {next_rod} ({price:,} Coinz 🪙)",
-                style=discord.ButtonStyle.success if can_afford else discord.ButtonStyle.secondary,
-                disabled=not can_afford,
-                custom_id="buy_rod",
-                emoji="🎣"
-            )
-            btn.callback = self.buy_rod_callback
-            self.add_item(btn)
-        else:
-            self.add_item(discord.ui.Button(label="Đã sở hữu cần câu tốt nhất!", disabled=True))
-
-    async def buy_rod_callback(self, interaction: discord.Interaction):
+    @discord.ui.button(label="Câu Tiếp", style=discord.ButtonStyle.success, emoji="🎣")
+    async def fish_again(self, interaction: discord.Interaction, button: discord.ui.Button):
         if interaction.user.id != self.user_id:
             return
+        
+        # Reset timeout
+        self.timeout = 60
+        await interaction.response.defer()
+        await self.cog.process_fishing(interaction, self.current_biome, view=self)
 
-        try:
-            curr_idx = ROD_LIST.index(self.current_rod)
-            next_rod = ROD_LIST[curr_idx + 1]
-            price = RODS[next_rod]["price"]
-
-            await self.cog.db.add_points(interaction.user.id, interaction.guild_id, -price)
-            await self.cog.db.update_fishing_data(interaction.user.id, rod_type=next_rod)
+    @discord.ui.button(label="Bán Nhanh", style=discord.ButtonStyle.secondary, emoji="💰")
+    async def sell_fast(self, interaction: discord.Interaction, button: discord.ui.Button):
+        if interaction.user.id != self.user_id:
+            return
             
-            self.current_rod = next_rod
-            self.money -= price
-            self.update_buttons()
-            
-            await interaction.response.edit_message(
-                content=f"✅ Bạn đã mua **{next_rod}** thành công!",
-                view=self
-            )
-        except Exception as e:
-            await interaction.response.send_message(f"Có lỗi xảy ra: {e}", ephemeral=True)
+        if not self.last_catch:
+            await interaction.response.send_message("❌ Không có cá để bán hoặc đã bán rồi!", ephemeral=True)
+            return
 
+        fish_name = self.last_catch['name']
+        fish_value = self.last_catch['value']
+        
+        # Remove fish from inventory and add money
+        # Since we just added it, we decrement count and value
+        data = await self.cog.db.get_fishing_data(self.user_id)
+        inv = data.get("inventory", {})
+        fish_inv = inv.get("fish", {})
+        
+        if fish_name in fish_inv and fish_inv[fish_name]["count"] > 0:
+            fish_inv[fish_name]["count"] -= 1
+            fish_inv[fish_name]["total_value"] -= fish_value
+            if fish_inv[fish_name]["count"] <= 0:
+                del fish_inv[fish_name]
+                
+            await self.cog.db.update_fishing_data(self.user_id, inventory=inv)
+            await self.cog.db.add_points(self.user_id, interaction.guild_id, fish_value)
+            
+            button.disabled = True
+            button.label = "Đã Bán"
+            self.last_catch = None # Prevent double sell
+            await interaction.response.edit_message(view=self)
+            await interaction.followup.send(f"✅ Đã bán **{fish_name}** với giá **{fish_value:,}** Coinz!", ephemeral=True)
+        else:
+             await interaction.response.send_message("❌ Cá này không còn trong túi đồ (có thể đã bán?)", ephemeral=True)
 
 class CauCaCog(commands.Cog):
     def __init__(self, bot: commands.Bot, db: DatabaseManager):
         self.bot = bot
         self.db = db
-
-    async def get_current_channel_game(self, channel_id):
-        return await self.db.get_channel_config(channel_id)
 
     @app_commands.command(name="kenh-cau-ca", description="Set kênh hiện tại làm kênh câu cá")
     @app_commands.checks.has_permissions(administrator=True)
@@ -125,188 +175,432 @@ class CauCaCog(commands.Cog):
         """Đặt kênh hiện tại làm kênh chuyên câu cá"""
         await self.db.set_channel_config(interaction.channel_id, interaction.guild_id, "fishing")
         await interaction.response.send_message(
-            f"✅ Đã đặt kênh {interaction.channel.mention} làm kênh **Câu Cá**! 🎣",
+            f"✅ Đã đặt kênh {interaction.channel.mention} làm kênh **Câu Cá**! 🎣\nNgười chơi có thể bắt đầu bằng lệnh `/fish`.",
             ephemeral=False
         )
 
-    @app_commands.command(name="fish", description="Câu cá (yêu cầu đặt kênh câu cá)")
-    async def fish(self, interaction: discord.Interaction):
-        # 1. Check channel
-        game_type = await self.get_current_channel_game(interaction.channel_id)
+    async def get_stats_multiplier(self, user_id):
+        """Calculate total Power and Luck from Rod + Bait"""
+        data = await self.db.get_fishing_data(user_id)
+        stats = data.get("stats", {})
+        
+        # Rod Stats
+        rod_name = data.get("rod_type", "Plastic Rod")
+        rod = RODS.get(rod_name, RODS["Plastic Rod"])
+        
+        # Bait Stats
+        bait_name = stats.get("current_bait")
+        bait = BAITS.get(bait_name, {"power": 0, "luck": 0})
+        
+        total_power = rod["power"] + bait["power"]
+        total_luck = rod["luck"] + bait["luck"]
+        
+        return total_power, total_luck, data, bait_name
+
+    def calculate_catch(self, biome_name, power, luck):
+        """Logic chính xác định kết quả câu cá"""
+        biome = BIOMES[biome_name]
+        
+        # 1. Miss Chance (Base 30%, reduced by Power)
+        miss_chance = max(5, 30 - power * 0.5)
+        if random.uniform(0, 100) < miss_chance:
+            return None # Missed
+            
+        # 2. Determine Rarity
+        # Luck increases chance to roll higher rarities
+        roll = random.uniform(0, 100) - (luck * 0.5) 
+        
+        rarity_name = "Common"
+        # Check from rarest to common
+        if roll <= RARITIES["Mythical"]["chance"]: rarity_name = "Mythical"
+        elif roll <= RARITIES["Legendary"]["chance"]: rarity_name = "Legendary"
+        elif roll <= RARITIES["Epic"]["chance"]: rarity_name = "Epic"
+        elif roll <= RARITIES["Rare"]["chance"]: rarity_name = "Rare"
+        elif roll <= RARITIES["Uncommon"]["chance"]: rarity_name = "Uncommon"
+        
+        # 3. Determine Fish Specie
+        # Filter fish by rarity? Or just pick random from biome and apply rarity modifier?
+        # User requested: "cho mỗi loại hiếm 1 màu khác nhau".
+        # Let's simplify: Fish species are generic to biome, Rarity is an applied attribute.
+        fish_specie = random.choice(biome["fish"])
+        
+        # 4. Determine Size
+        # Size = Base * Random(0.8 -> 1.5) + Power Bonus
+        # Power helps catch bigger fish
+        size_mult = random.uniform(0.8, 1.2) + (power * 0.01)
+        # Rarity greatly boosts size
+        rarity_size_bonus = {"Common": 1, "Uncommon": 1.2, "Rare": 1.5, "Epic": 2, "Legendary": 3, "Mythical": 5}
+        
+        base_size = random.uniform(fish_specie["min_size"], fish_specie["max_size"])
+        final_size = base_size * size_mult * rarity_size_bonus[rarity_name]
+        
+        # 5. Determine Value
+        # Value = Base * Size * Rarity_Mult
+        rarity_val_mult = RARITIES[rarity_name]["mul"]
+        value = int(fish_specie["base_value"] * (final_size / 20) * rarity_val_mult)
+        if value < 1: value = 1
+        
+        return {
+            "name": fish_specie["name"],
+            "rarity": rarity_name,
+            "size": round(final_size, 2),
+            "value": value,
+            "emoji": RARITIES[rarity_name]["emoji"],
+            "color": RARITIES[rarity_name]["color"]
+        }
+
+    async def process_fishing(self, interaction: discord.Interaction, biome_name, view=None):
+        # Validate Channel (Optional)
+        game_type = await self.db.get_channel_config(interaction.channel_id)
         if game_type != "fishing":
-            await interaction.response.send_message(
-                "❌ Kênh này chưa được thiết lập để câu cá! Admin hãy dùng `/kenh-cau-ca` để cài đặt.",
-                ephemeral=True
-            )
+            await interaction.followup.send("❌ Kênh này không phải hồ câu! (Admin hãy dùng `/kenh-cau-ca`)", ephemeral=True)
             return
 
-        # 2. Get User Data
         user_id = interaction.user.id
-        data = await self.db.get_fishing_data(user_id)
-        
-        rod_name = data.get("rod_type", "Plastic Rod")
-        rod_stats = RODS.get(rod_name, RODS["Plastic Rod"])
-        
-        # Base stats
-        base_quantity = 1.0
-        base_quality = 1.1
-        
-        # Apply Rod Multipliers
-        quantity_mul = rod_stats.get("mul_qty", 1.0)
-        quality_add = rod_stats.get("add_qual", 0.0)
-        
-        final_quantity_val = base_quantity * quantity_mul
-        final_quality = base_quality + quality_add
-        
-        # Calculate rolls
-        min_rolls = int(final_quantity_val * 5)
-        max_rolls = int(final_quantity_val * 10)
-        rolls = random.randint(min_rolls, max_rolls)
-        
-        # Fishing Logic
-        caught_fish = {} # {FishName: Count}
-        total_xp_gain = 0
-        new_items = [] # For treasures/crates if implemented later
-        
-        for _ in range(rolls):
-            # Roll quality for this fish
-            # Chance to upgrade quality tier by 1 based on decimal part
-            # e.g. quality 1.4 -> base 1, 40% chance to be 2
-            current_quality_roll = int(final_quality)
-            if random.random() < (final_quality % 1):
-                current_quality_roll += 1
-            
-            # Map quality directly to fish index (1-based from original script logic roughly)
-            # Original: 1=Fish, 2=Salmon, ...
-            # Let's clamp it
-            if current_quality_roll < 1: current_quality_roll = 1
-            if current_quality_roll > 10: current_quality_roll = 10
-            
-            fish_name = FISH_TYPES[current_quality_roll - 1]
-            
-            caught_fish[fish_name] = caught_fish.get(fish_name, 0) + 1
-            total_xp_gain += FISH_DATA[fish_name]["xp"]
-
-        # Update Inventory
+        power, luck, data, bait_name = await self.get_stats_multiplier(user_id)
         inventory = data.get("inventory", {})
-        for fname, fcount in caught_fish.items():
-            inventory[fname] = inventory.get(fname, 0) + fcount
-            
-        # Update Stats (XP)
         stats = data.get("stats", {})
-        stats["xp"] = stats.get("xp", 0) + total_xp_gain
         
-        # Save to DB
+        # Check Bait Consumption
+        bait_consumed = False
+        if bait_name:
+            baits_inv = inventory.get("baits", {})
+            if baits_inv.get(bait_name, 0) > 0:
+                baits_inv[bait_name] -= 1
+                bait_consumed = True
+                if baits_inv[bait_name] <= 0:
+                    stats["current_bait"] = None
+                    del baits_inv[bait_name]
+            else:
+                stats["current_bait"] = None # Ran out
+                
+        # Treasure Chance (2% + Luck)
+        treasure_chance = 2 + (luck * 0.1)
+        if random.uniform(0, 100) < treasure_chance:
+            # TREASURE EVENT
+            bonus_coinz = random.randint(1000, 5000) * (1 + luck*0.05)
+            await self.db.add_points(user_id, interaction.guild_id, int(bonus_coinz))
+            
+            embed = discord.Embed(title="🎁 BẠN CÂU ĐƯỢC KHO BÁU!", color=discord.Color.gold())
+            embed.description = f"Bên trong rương là **{int(bonus_coinz):,}** Coinz {emojis.ANIMATED_EMOJI_COINZ}!"
+            embed.set_footer(text="May mắn quá!")
+        else:
+            # FISHING EVENT
+            result = self.calculate_catch(biome_name, power, luck)
+            
+            if not result:
+                embed = discord.Embed(description=f"🎣 ... Bạn ngồi đợi mãi nhưng không có gì cắn câu. {emojis.SAD}", color=discord.Color.light_grey())
+                if bait_consumed:
+                    embed.set_footer(text=f"Đã mất 1 {bait_name}...")
+            else:
+                # Add to inventory
+                fish_inv = inventory.get("fish", {})
+                f_name = result["name"]
+                
+                # We store simplified inventory: Name -> {count, total_value}
+                # To distinguish rarities in storage would be complex for this simple JSON structure without bloating it.
+                # User asked for sell price depends on size/rarity.
+                # SOLUTION: Calculate value NOW and store it in the "bag".
+                
+                if f_name not in fish_inv:
+                    fish_inv[f_name] = {"count": 0, "total_value": 0}
+                
+                fish_inv[f_name]["count"] += 1
+                fish_inv[f_name]["total_value"] += result["value"]
+                
+                # Calc XP
+                xp_gain = int(result["value"] / 5)
+                stats["xp"] = stats.get("xp", 0) + xp_gain
+                
+                embed = discord.Embed(title=f"🎣 CÂU ĐƯỢC CÁ!", color=result["color"])
+                embed.description = (
+                    f"**{result['emoji']} {result['name']}**\n"
+                    f"Độ hiếm: **{result['rarity']}**\n"
+                    f"Kích thước: **{result['size']}cm**\n"
+                    f"Giá trị: **{result['value']:,}** Coinz {emojis.ANIMATED_EMOJI_COINZ}\n"
+                    f"Exp: +{xp_gain}"
+                )
+                if result['rarity'] in ["Legendary", "Mythical"]:
+                    embed.set_image(url="https://media.discordapp.net/attachments/123456789/legendary_fish.gif") # Placeholder
+        
+        # Save DB
         await self.db.update_fishing_data(user_id, inventory=inventory, stats=stats)
         
-        # Embed Result
-        embed = discord.Embed(
-            title="🎣 KẾT QUẢ CÂU CÁ",
-            color=discord.Color.blue()
-        )
-        
-        details = []
-        for fname, fcount in caught_fish.items():
-            details.append(f"**{fcount}** {fname}")
-        
-        if not details:
-           desc = "Bạn không câu được gì cả... (Xui xẻo thật!)"
-        else:
-           desc = ", ".join(details)
-           
-        embed.description = f"Bạn đã câu được:\n{desc}\n\n✨ **+{int(total_xp_gain)} XP**"
-        embed.set_footer(text=f"Cần câu: {rod_name}")
-        
-        await interaction.response.send_message(embed=embed)
+        # Response
+        if view:
+            # Update view state for new catch if applicable
+            if result:
+                 view.last_catch = {'name': result['name'], 'value': result['value']}
+                 # Re-enable sell button if it was disabled
+                 for child in view.children:
+                     if isinstance(child, discord.ui.Button) and child.custom_id == "sell_fast": 
+                         # Note: custom_id isn't explicitly set above, so we check label or method
+                         pass
+                 
+                 # Re-instantiate view to reset buttons state cleanly (easiest way)
+                 new_view = FishingView(self, user_id, biome_name, last_catch={'name': result['name'], 'value': result['value']})
+                 new_view.message = view.message
+                 view = new_view # Swap to new view
 
-    @app_commands.command(name="inventory", description="Xem túi cá của bạn")
-    async def inventory(self, interaction: discord.Interaction):
-        user_id = interaction.user.id
-        data = await self.db.get_fishing_data(user_id)
-        inventory = data.get("inventory", {})
-        
-        if not inventory or sum(inventory.values()) == 0:
-            await interaction.response.send_message("🎒 Túi của bạn đang trống! Hãy đi câu cá ngay (`/fish`).", ephemeral=True)
-            return
-            
-        embed = discord.Embed(title=f"🎒 Túi Cá Của {interaction.user.display_name}", color=discord.Color.green())
-        
-        # Sort by value
-        sorted_items = sorted(inventory.items(), key=lambda x: FISH_DATA.get(x[0], {}).get("value", 0), reverse=True)
-        
-        desc_lines = []
-        total_value = 0
-        
-        for fname, count in sorted_items:
-            if count > 0:
-                val_per = FISH_DATA.get(fname, {}).get("value", 0)
-                total_val = val_per * count
-                total_value += total_val
-                desc_lines.append(f"• **{fname}**: {count} (Trị giá: {total_val:,} Coinz {emojis.ANIMATED_EMOJI_COINZ})")
+            if view.message:
+                await view.message.edit(embed=embed, view=view)
+            else:
+                msg = await interaction.followup.send(embed=embed, view=view)
+                view.message = msg
+        else:
+            # First time call
+            last_catch_data = None
+            if result:
+                last_catch_data = {'name': result['name'], 'value': result['value']}
                 
-        embed.description = "\n".join(desc_lines)
-        embed.add_field(name="💰 Tổng Giá Trị", value=f"**{total_value:,}** Coinz {emojis.ANIMATED_EMOJI_COINZ}", inline=False)
-        embed.set_footer(text="Dùng /sell để bán tất cả cá.")
-        
-        await interaction.response.send_message(embed=embed)
+            view = FishingView(self, user_id, biome_name, last_catch=last_catch_data)
+            msg = await interaction.followup.send(embed=embed, view=view)
+            view.message = msg
 
-    @app_commands.command(name="sell", description="Bán tất cả cá trong túi")
-    async def sell(self, interaction: discord.Interaction):
-        user_id = interaction.user.id
-        data = await self.db.get_fishing_data(user_id)
-        inventory = data.get("inventory", {})
+    @app_commands.command(name="fish", description="Bắt đầu câu cá!")
+    async def fish(self, interaction: discord.Interaction):
+        await interaction.response.defer()
         
-        if not inventory or sum(inventory.values()) == 0:
-            await interaction.response.send_message("🎒 Bạn không có cá để bán!", ephemeral=True)
-            return
-            
-        total_payout = 0
-        sold_details = []
+        data = await self.db.get_fishing_data(interaction.user.id)
+        current_biome = data.get("stats", {}).get("current_biome", "Lake")
         
-        for fname, count in inventory.items():
-            if count > 0:
-                val = FISH_DATA.get(fname, {}).get("value", 0)
-                total_payout += val * count
-                sold_details.append(f"{count} {fname}")
-                inventory[fname] = 0 # Clear item
-        
-        # Update DB
-        if total_payout > 0:
-            await self.db.add_points(user_id, interaction.guild_id, total_payout)
-            await self.db.update_fishing_data(user_id, inventory=inventory)
-            
-            embed = discord.Embed(title="💰 BÁN CÁ", color=discord.Color.gold())
-            embed.description = f"Bạn đã bán tất cả cá và nhận được **{total_payout:,}** Coinz {emojis.ANIMATED_EMOJI_COINZ}!"
-            await interaction.response.send_message(embed=embed)
-        else:
-            await interaction.response.send_message("Lỗi tính toán giá trị bán.", ephemeral=True)
+        # Trigger fishing
+        await self.process_fishing(interaction, current_biome)
 
-    @app_commands.command(name="shop", description="Cửa hàng cần câu")
-    async def shop(self, interaction: discord.Interaction):
+    @app_commands.command(name="khu-vuc", description="Xem và di chuyển đến các khu vực câu cá")
+    async def biomes_cmd(self, interaction: discord.Interaction):
+        data = await self.db.get_fishing_data(interaction.user.id)
+        stats = data.get("stats", {})
+        current = stats.get("current_biome", "Lake")
+        unlocked = stats.get("unlocked_biomes", ["Lake"])
+        xp = stats.get("xp", 0)
+        
+        embed = discord.Embed(title="🗺️ BẢN ĐỒ CÂU CÁ", color=discord.Color.teal())
+        embed.description = f"Hiện tại đang ở: **{BIOMES[current]['emoji']} {BIOMES[current]['name']}**\nKinh nghiệm (XP): **{xp:,}**"
+        
+        view = discord.ui.View()
+        
+        async def unlock_or_travel(interaction: discord.Interaction, biome_key: str):
+            # Refresh data
+            d = await self.db.get_fishing_data(interaction.user.id)
+            s = d.get("stats", {})
+            u = s.get("unlocked_biomes", ["Lake"])
+            
+            if biome_key in u:
+                s["current_biome"] = biome_key
+                await self.db.update_fishing_data(interaction.user.id, stats=s)
+                await interaction.response.send_message(f"✈️ Đã chuyển đến **{BIOMES[biome_key]['name']}**!", ephemeral=True)
+            else:
+                # Try unlock
+                cost = BIOMES[biome_key]["req_money"]
+                req_xp = BIOMES[biome_key]["req_xp"]
+                
+                u_bal = await self.db.get_player_points(interaction.user.id, interaction.guild_id)
+                curr_xp = s.get("xp", 0)
+                
+                if curr_xp < req_xp:
+                    await interaction.response.send_message(f"❌ Bạn chưa đủ {req_xp:,} XP để mở khóa!", ephemeral=True)
+                    return
+                if u_bal < cost:
+                    await interaction.response.send_message(f"❌ Bạn không đủ {cost:,} Coinz để mở khóa!", ephemeral=True)
+                    return
+                
+                await self.db.add_points(interaction.user.id, interaction.guild_id, -cost)
+                u.append(biome_key)
+                s["unlocked_biomes"] = u
+                s["current_biome"] = biome_key
+                await self.db.update_fishing_data(interaction.user.id, stats=s)
+                await interaction.response.send_message(f"🎉 Đã mở khóa và chuyển đến **{BIOMES[biome_key]['name']}**!", ephemeral=True)
+
+        for key, info in BIOMES.items():
+            is_unlocked = key in unlocked
+            status = "✅ Đang ở" if key == current else ("🔓 Đã mở" if is_unlocked else "🔒 Khóa")
+            
+            field_val = f"{info['desc']}\n"
+            if not is_unlocked:
+                field_val += f"Yêu cầu: {info['req_xp']} XP | {info['req_money']:,} Coinz"
+            
+            embed.add_field(name=f"{info['emoji']} {info['name']} ({status})", value=field_val, inline=False)
+            
+            # Button logic requires dynamic callback binding or custom class, simulating simplified:
+            # Ideally use a Select Menu for biomes if many
+            pass 
+
+        # Using Select Menu for Biomes
+        select = discord.ui.Select(placeholder="Chọn khu vực để đi...")
+        
+        for key, info in BIOMES.items():
+            label = info['name']
+            desc_s = "Đã mở khóa" if key in unlocked else f"Cần {info['req_xp']} XP, {info['req_money']} coinz"
+            emoji = info['emoji']
+            select.add_option(label=label, value=key, description=desc_s, emoji=emoji)
+        
+        async def select_callback(inter):
+            val = select.values[0]
+            await unlock_or_travel(inter, val)
+        
+        select.callback = select_callback
+        view.add_item(select)
+        
+        await interaction.response.send_message(embed=embed, view=view, ephemeral=True)
+
+    @app_commands.command(name="moi-cau", description="Cửa hàng mồi câu")
+    async def bait_shop(self, interaction: discord.Interaction):
+        embed = discord.Embed(title="🪱 CỬA HÀNG MỒI CÂU", description="Mua mồi để tăng tỉ lệ câu!", color=discord.Color.dark_green())
+        
+        select = discord.ui.Select(placeholder="Mua mồi câu...")
+        
+        for name, info in BAITS.items():
+            embed.add_field(
+                name=f"{name} ({info['price']:,} Coinz)",
+                value=f"💪 Power: +{info['power']} | 🍀 Luck: +{info['luck']}\n*{info['desc']}*",
+                inline=False
+            )
+            select.add_option(label=f"{name} - {info['price']:,} Coinz", value=name, description=f"Mua 10x {name}")
+
+        async def buy_bait(inter):
+            b_name = select.values[0]
+            cost = BAITS[b_name]["price"] * 10
+            
+            points = await self.db.get_player_points(inter.user.id, inter.guild_id)
+            if points < cost:
+                await inter.response.send_message("❌ Không đủ tiền!", ephemeral=True)
+                return
+
+            await self.db.add_points(inter.user.id, inter.guild_id, -cost)
+            
+            data = await self.db.get_fishing_data(inter.user.id)
+            inv = data.get("inventory", {})
+            if "baits" not in inv: inv["baits"] = {}
+            
+            inv["baits"][b_name] = inv["baits"].get(b_name, 0) + 10
+            
+            # Auto equip if none
+            stats = data.get("stats", {})
+            if not stats.get("current_bait"):
+                 stats["current_bait"] = b_name
+            
+            await self.db.update_fishing_data(inter.user.id, inventory=inv, stats=stats)
+            await inter.response.send_message(f"✅ Đã mua 10x **{b_name}**! (Đang trang bị: {stats['current_bait']})", ephemeral=True)
+
+        select.callback = buy_bait
+        view = discord.ui.View()
+        view.add_item(select)
+        await interaction.response.send_message(embed=embed, view=view)
+
+    @app_commands.command(name="can-cau", description="Cửa hàng & Trang bị cần câu")
+    async def rod_shop(self, interaction: discord.Interaction):
         user_id = interaction.user.id
-        points = await self.db.get_player_points(user_id, interaction.guild_id)
         data = await self.db.get_fishing_data(user_id)
         current_rod = data.get("rod_type", "Plastic Rod")
         
-        embed = discord.Embed(title="🏪 Cửa Hàng Đồ Câu", color=discord.Color.purple())
-        embed.description = f"Số dư của bạn: **{points:,}** Coinz {emojis.ANIMATED_EMOJI_COINZ}\nCần câu hiện tại: **{current_rod}**"
+        embed = discord.Embed(title="🎣 CỬA HÀNG CẦN CÂU", color=discord.Color.blue())
+        embed.description = f"Cần câu hiện tại: **{current_rod}**"
+
+        # Find next rod
+        try:
+            curr_idx = ROD_LIST.index(current_rod)
+        except:
+            current_rod = "Plastic Rod"
+            curr_idx = 0
+            
+        view = discord.ui.View()
         
-        # Show rod list
-        rod_desc = ""
-        for name, stats in RODS.items():
-            price = stats["price"]
-            rod_desc += f"• **{name}**: {price:,} Coinz {emojis.ANIMATED_EMOJI_COINZ}\n"
-        
-        embed.add_field(name="📜 Danh Sách Cần Câu", value=rod_desc, inline=False)
-        
-        view = ShopView(self, user_id, current_rod, points)
+        if curr_idx < len(ROD_LIST) - 1:
+            next_rod = ROD_LIST[curr_idx + 1]
+            info = RODS[next_rod]
+            
+            embed.add_field(
+                name="Nâng cấp tiếp theo", 
+                value=f"**{next_rod}**\n💰 Giá: {info['price']:,} Coinz\n💪 Power: {info['power']}\n🍀 Luck: {info['luck']}",
+                inline=False
+            )
+            
+            btn = discord.ui.Button(label=f"Mua {next_rod}", style=discord.ButtonStyle.primary, emoji="🆙")
+            
+            async def buy_rod(inter):
+                points = await self.db.get_player_points(inter.user.id, inter.guild_id)
+                if points < info['price']:
+                    await inter.response.send_message("❌ Không đủ tiền!", ephemeral=True)
+                    return
+                
+                await self.db.add_points(inter.user.id, inter.guild_id, -info['price'])
+                await self.db.update_fishing_data(inter.user.id, rod_type=next_rod)
+                await inter.response.send_message(f"✅ Đã nâng cấp lên **{next_rod}** thành công!", ephemeral=True)
+                
+            btn.callback = buy_rod
+            view.add_item(btn)
+        else:
+            embed.description += "\n✨ Bạn đã sở hữu cần câu tối thượng!"
+
         await interaction.response.send_message(embed=embed, view=view)
 
+    @app_commands.command(name="inventory", description="Xem túi cá")
+    async def inventory(self, interaction: discord.Interaction):
+        data = await self.db.get_fishing_data(interaction.user.id)
+        inv = data.get("inventory", {})
+        fish_inv = inv.get("fish", {})
+        baits_inv = inv.get("baits", {})
+        
+        embed = discord.Embed(title=f"🎒 TÚI ĐỒ CỦA {interaction.user.display_name.upper()}", color=discord.Color.green())
+        
+        # Fish List
+        f_list = []
+        total_val = 0
+        for name, info in fish_inv.items():
+            count = info.get("count", 0)
+            val = info.get("total_value", 0)
+            if count > 0:
+                f_list.append(f"• {name}: x{count} (Tổng: {val:,} Coinz)")
+                total_val += val
+        
+        if f_list:
+            embed.add_field(name=f"🐟 Cá ({total_val:,} Coinz)", value="\n".join(f_list[:15]) + ("\n..." if len(f_list)>15 else ""), inline=False)
+        else:
+            embed.add_field(name="🐟 Cá", value="Trống", inline=False)
+
+        # Bait List
+        b_list = []
+        for name, count in baits_inv.items():
+            if count > 0:
+                b_list.append(f"• {name}: x{count}")
+        
+        if b_list:
+            embed.add_field(name="🪱 Mồi Câu", value="\n".join(b_list), inline=False)
+        else:
+            embed.add_field(name="🪱 Mồi Câu", value="Trống", inline=False)
+            
+        # Stats
+        stats = data.get("stats", {})
+        embed.set_footer(text=f"Level: {stats.get('level', 1)} | XP: {stats.get('xp', 0)} | Mồi đang dùng: {stats.get('current_bait', 'Không')}")
+        
+        await interaction.response.send_message(embed=embed)
+
+    @app_commands.command(name="sell", description="Bán tất cả cá")
+    async def sell(self, interaction: discord.Interaction):
+        data = await self.db.get_fishing_data(interaction.user.id)
+        inv = data.get("inventory", {})
+        fish_inv = inv.get("fish", {})
+        
+        if not fish_inv:
+             await interaction.response.send_message("🎒 Không có cá để bán!", ephemeral=True)
+             return
+
+        total_payout = 0
+        for name, info in fish_inv.items():
+            total_payout += info.get("total_value", 0)
+            
+        if total_payout == 0:
+             await interaction.response.send_message("🎒 Không có cá có giá trị để bán!", ephemeral=True)
+             return
+
+        # Clear fish
+        inv["fish"] = {}
+        await self.db.update_fishing_data(interaction.user.id, inventory=inv)
+        await self.db.add_points(interaction.user.id, interaction.guild_id, total_payout)
+        
+        await interaction.response.send_message(f"💰 Đã bán sạch cá và nhận được **{total_payout:,}** Coinz {emojis.ANIMATED_EMOJI_COINZ}!")
 
 async def setup(bot: commands.Bot):
-    # Retrieve the existing DatabaseManager instance if possible, 
-    # but since setup needs to pass it, we create or retrieve.
-    # Typically bot has it stored or we init new one.
-    # Provided files show setup instantiates new DatabaseManager(config.DATABASE_PATH)
     db = DatabaseManager(config.DATABASE_PATH)
     await bot.add_cog(CauCaCog(bot, db))

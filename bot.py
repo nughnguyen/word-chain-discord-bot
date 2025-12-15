@@ -205,6 +205,10 @@ def main():
         print(f"  ⏰ Turn Timeout: {config.TURN_TIMEOUT}s")
         print()
         
+        # Start Web Server (Keep Alive)
+        from keep_alive import keep_alive
+        keep_alive()
+        
         bot.run(config.DISCORD_TOKEN)
     
     except discord.LoginFailure:
