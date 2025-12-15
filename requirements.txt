@@ -10,3 +10,5 @@ discord.py
 python-dotenv
 supabase
 websockets
+flash
+flask
