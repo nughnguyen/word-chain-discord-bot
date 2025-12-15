@@ -37,6 +37,7 @@ class HelpView(discord.ui.View):
         min_values=1,
         max_values=1,
         options=[
+            discord.SelectOption(label="Trang Chủ", description="Quay lại menu chính", emoji="🏠"),
             discord.SelectOption(label="Hướng Dẫn Tân Thủ", description="Cách chơi & Kiếm Coinz", emoji="📘"),
             discord.SelectOption(label="Games Commands", description="Word Chain, Vua Tiếng Việt, Bầu Cua", emoji="🎮"),
             discord.SelectOption(label="Leaderboard Commands", description="Xem rank", emoji="🏆"),
@@ -54,7 +55,54 @@ class HelpView(discord.ui.View):
             timestamp=datetime.datetime.now()
         )
         
-        if choice == "Hướng Dẫn Tân Thủ":
+        if choice == "Trang Chủ":
+            embed.title = "HELP MENU"
+            embed.color = 0x2b2d31
+            
+            # Bot Info
+            embed.add_field(
+                name=f"{emojis.ANIMATED_EMOJI_DISCORD} **BOT INFO** {emojis.ANIMATED_EMOJI_DISCORD}",
+                value=f"{emojis.BAR} {emojis.ANIMATED_EMOJI_DOT} Prefix: `{config.COMMAND_PREFIX}`",
+                inline=False
+            )
+            
+            # Commands List
+            commands_list = (
+                f"{emojis.BAR} {emojis.ANIMATED_EMOJI_DOT} Games Commands\n"
+                f"{emojis.BAR} {emojis.ANIMATED_EMOJI_DOT} Leaderboard Commands\n"
+                f"{emojis.BAR} {emojis.ANIMATED_EMOJI_DOT} Admin Commands\n"
+                f"{emojis.BAR} {emojis.ANIMATED_EMOJI_DOT} Utility Commands\n"
+                f"{emojis.BAR} {emojis.ANIMATED_EMOJI_DOT} Donation"
+            )
+            embed.add_field(
+                name=f"{emojis.ANIMATED_EMOJI_DISCORD} **BOT'S COMMANDS** {emojis.ANIMATED_EMOJI_DISCORD}",
+                value=commands_list,
+                inline=False
+            )
+
+            # Bot Status
+            ping = round(self.bot.latency * 1000)
+            server_count = len(self.bot.guilds)
+            user_count = sum(guild.member_count for guild in self.bot.guilds)
+            command_count = len(self.bot.tree.get_commands())
+            
+            status_text = (
+                f"{emojis.BAR} {emojis.ANIMATED_EMOJI_DOT} Current Ping: {ping}ms\n"
+                f"{emojis.BAR} {emojis.ANIMATED_EMOJI_DOT} Total Commands: {command_count}\n"
+                f"{emojis.BAR} {emojis.ANIMATED_EMOJI_DOT} Total Users: {user_count}\n"
+                f"{emojis.BAR} {emojis.ANIMATED_EMOJI_DOT} Total Servers: {server_count}"
+            )
+            
+            embed.add_field(
+                name=f"{emojis.ANIMATED_EMOJI_DISCORD} **BOT'S STATUS** {emojis.ANIMATED_EMOJI_DISCORD}",
+                value=status_text,
+                inline=False
+            )
+            
+            embed.set_footer(text=f"Requested by {interaction.user.name}", icon_url=interaction.user.avatar.url if interaction.user.avatar else None)
+            embed.set_image(url="https://cdn.discordapp.com/attachments/1305556786304127097/1327687391267389632/thenoicez.gif?ex=6940eafd&is=693f997d&hm=332f39b7a027ecfebdead2cd326f57c1502020fff8922b78c8fdb623fa49a43b&")
+
+        elif choice == "Hướng Dẫn Tân Thủ":
             embed.description = "Chào mừng bạn đến với **Marble Soda**! Dưới đây là hướng dẫn cơ bản:"
             
             embed.add_field(
@@ -216,10 +264,10 @@ class HelpView(discord.ui.View):
             embed.color = config.COLOR_GOLD
             embed.set_footer(text="Hệ thống xử lý tự động trong 1-3 phút • Cảm ơn bạn đã ủng hộ!")
             embed.set_image(url="https://cdn.discordapp.com/attachments/1305556786304127097/1327687391267389632/thenoicez.gif?ex=6940eafd&is=693f997d&hm=332f39b7a027ecfebdead2cd326f57c1502020fff8922b78c8fdb623fa49a43b&")
-            await interaction.response.send_message(embed=embed, view=DonationView(), ephemeral=True)
+            await interaction.response.edit_message(embed=embed, view=DonationView())
             return
             
-        await interaction.response.send_message(embed=embed, ephemeral=True)
+        await interaction.response.edit_message(embed=embed)
 
 class Help(commands.Cog):
     def __init__(self, bot):
