@@ -105,6 +105,20 @@ class Donation(commands.Cog):
 
         except Exception as e:
             print(f"Error in donation loop: {e}")
+            
+        # Cleanup expired pending transactions (> 10 minutes)
+        try:
+            from datetime import datetime, timedelta, timezone
+            
+            # Calculate threshold (10 minutes ago)
+            # Assuming timestamps are stored in UTC
+            threshold = (datetime.now(timezone.utc) - timedelta(minutes=10)).isoformat()
+            
+            # Delete pending transactions created before the threshold
+            self.supabase.table('transactions').delete().eq('status', 'pending').lt('created_at', threshold).execute()
+            
+        except Exception as e:
+            print(f"Error cleaning up expired transactions: {e}")
 
     @check_donations.before_loop
     async def before_check_donations(self):
