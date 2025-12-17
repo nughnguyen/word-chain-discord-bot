@@ -5,7 +5,7 @@ import asyncio
 import random
 import config
 from utils import emojis
-from database.db_manager import DatabaseManager
+
 
 class BetModal(discord.ui.Modal):
     def __init__(self, side_name, side_emoji, current_balance, callback_func):
@@ -207,7 +207,7 @@ class BauCuaView(discord.ui.View):
             print(f"Error updating embed: {e}")
 
 class BauCuaCog(commands.Cog):
-    def __init__(self, bot: commands.Bot, db: DatabaseManager):
+    def __init__(self, bot: commands.Bot, db):
         self.bot = bot
         self.db = db
         self.sides_map = {
@@ -455,5 +455,4 @@ class BauCuaCog(commands.Cog):
         await interaction.response.send_message("⚠️ Game Bầu Cua tự động kết thúc sau khi quay. Hãy bấm nút 'QUAY NGAY'!", ephemeral=True)
 
 async def setup(bot: commands.Bot):
-    db = DatabaseManager(config.DATABASE_PATH)
-    await bot.add_cog(BauCuaCog(bot, db))
+    await bot.add_cog(BauCuaCog(bot, bot.db))

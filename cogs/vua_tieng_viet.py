@@ -6,10 +6,10 @@ import random
 import asyncio
 import config
 from utils import emojis
-from database.db_manager import DatabaseManager
+
 
 class VuaTiengVietCog(commands.Cog):
-    def __init__(self, bot: commands.Bot, db: DatabaseManager):
+    def __init__(self, bot: commands.Bot, db):
         self.bot = bot
         self.db = db
         self.active_games = {} # channel_id -> {"answer": str, "scrambled": str, "state": str, "total_chars": int, "revealed_indices": set, "timer_task": Task}
@@ -238,5 +238,4 @@ class VuaTiengVietCog(commands.Cog):
                 await self.start_new_round(message.channel)
 
 async def setup(bot: commands.Bot):
-    db = DatabaseManager(config.DATABASE_PATH)
-    await bot.add_cog(VuaTiengVietCog(bot, db))
+    await bot.add_cog(VuaTiengVietCog(bot, bot.db))

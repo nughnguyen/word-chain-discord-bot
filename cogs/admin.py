@@ -9,11 +9,10 @@ import random
 import config
 from utils import embeds, emojis
 from utils.validator import WordValidator
-from database.db_manager import DatabaseManager
 
 
 class AdminCog(commands.Cog):
-    def __init__(self, bot: commands.Bot, db: DatabaseManager):
+    def __init__(self, bot: commands.Bot, db):
         self.bot = bot
         self.db = db
         self.validators = {}
@@ -98,19 +97,7 @@ class AdminCog(commands.Cog):
         )
         
         # Thêm bot vào danh sách người chơi
-        game_state = await self.db.get_game_state(interaction.channel_id)
-        players = game_state['players']
-        players.append(self.bot.user.id)
-        
-        # Update lại database
-        import aiosqlite
-        async with aiosqlite.connect(config.DATABASE_PATH) as db:
-            import json
-            await db.execute(
-                "UPDATE game_states SET players = ? WHERE channel_id = ?",
-                (json.dumps(players), interaction.channel_id)
-            )
-            await db.commit()
+        await self.db.add_player_to_game(interaction.channel_id, self.bot.user.id)
         
         # Gửi thông báo bắt đầu
         challenge_embed = embeds.create_bot_challenge_embed(difficulty)
@@ -157,46 +144,15 @@ class AdminCog(commands.Cog):
         if interaction.user.id != 561443914062757908:
              await interaction.response.send_message("❌ Chỉ có **Owner Bot** mới được dùng lệnh này!", ephemeral=True)
              return
-        import aiosqlite
         
-        async with aiosqlite.connect(config.DATABASE_PATH) as db:
-            if user:
-                # 1. Xóa Fishing Inventory (Global)
-                await db.execute("DELETE FROM fishing_inventory WHERE user_id = ?", (user.id,))
-                
-                # 2. Xóa Stats Local (Guild hiện tại)
-                await db.execute(
-                    "DELETE FROM player_stats WHERE user_id = ? AND guild_id = ?",
-                    (user.id, interaction.guild_id)
-                )
-                
-                # 3. Reset Global Stats (Guild 0) nhưng GIỮ LẠI total_points
-                # Reset daily info, streak, etc.
-                await db.execute("""
-                    UPDATE player_stats 
-                    SET games_played=0, words_submitted=0, correct_words=0, wrong_words=0, 
-                        longest_word='', longest_word_length=0, 
-                        daily_streak=0, last_daily_claim=NULL, last_daily_reward=0
-                    WHERE user_id = ? AND guild_id = 0
-                """, (user.id,))
-                
-                message = f"✅ Đã reset toàn bộ thống kê game, túi đồ câu cá của {user.mention} (Coiz {emojis.ANIMATED_EMOJI_COIZ} được bảo toàn)!"
-            else:
-                # Reset tất cả mọi người (Nguy hiểm, nhưng theo yêu cầu)
-                await db.execute("DELETE FROM fishing_inventory")
-                await db.execute("DELETE FROM player_stats WHERE guild_id = ?", (interaction.guild_id,))
-                # Reset global stats exclude points for ALL
-                await db.execute("""
-                    UPDATE player_stats 
-                    SET games_played=0, words_submitted=0, correct_words=0, wrong_words=0, 
-                        longest_word='', longest_word_length=0, 
-                        daily_streak=0, last_daily_claim=NULL, last_daily_reward=0
-                    WHERE guild_id = 0
-                """)
-                
-                message = f"✅ Đã reset thống kê game của TẤT CẢ thành viên (Coiz {emojis.ANIMATED_EMOJI_COIZ} được bảo toàn)!"
-            
-            await db.commit()
+        if user:
+            # Reset specific user
+            await self.db.reset_player_stats(user.id, interaction.guild_id)
+            message = f"✅ Đã reset toàn bộ thống kê game, túi đồ câu cá của {user.mention} (Coiz {emojis.ANIMATED_EMOJI_COIZ} được bảo toàn)!"
+        else:
+            # Reset tất cả mọi người
+            await self.db.reset_all_stats(interaction.guild_id)
+            message = f"✅ Đã reset thống kê game của TẤT CẢ thành viên (Coiz {emojis.ANIMATED_EMOJI_COIZ} được bảo toàn)!"
         
         await interaction.response.send_message(message, ephemeral=True)
 
@@ -212,26 +168,14 @@ class AdminCog(commands.Cog):
              await interaction.response.send_message("❌ Chỉ có **Owner Bot** mới được dùng lệnh này!", ephemeral=True)
              return
 
-        import aiosqlite
-        
-        # Confirm action? For now just execute.
-        
-        async with aiosqlite.connect(config.DATABASE_PATH) as db:
-            if user:
-                # Set coiz = 0 for user (guild_id = 0)
-                await db.execute(
-                    "UPDATE player_stats SET total_points = 0 WHERE user_id = ? AND guild_id = 0",
-                    (user.id,)
-                )
-                message = f"✅ Đã reset ví Coiz {emojis.ANIMATED_EMOJI_COIZ} của {user.mention} về 0!"
-            else:
-                # Reset ALL Global Coiz
-                await db.execute(
-                    "UPDATE player_stats SET total_points = 0 WHERE guild_id = 0"
-                )
-                message = "✅ Đã reset ví Coiz {emojis.ANIMATED_EMOJI_COIZ} của TẤT CẢ người chơi về 0!"
-                
-            await db.commit()
+        if user:
+            # Set coiz = 0 for user (guild_id = 0)
+            await self.db.reset_player_coiz(user.id)
+            message = f"✅ Đã reset ví Coiz {emojis.ANIMATED_EMOJI_COIZ} của {user.mention} về 0!"
+        else:
+            # Reset ALL Global Coiz
+            await self.db.reset_all_coiz()
+            message = "✅ Đã reset ví Coiz {emojis.ANIMATED_EMOJI_COIZ} của TẤT CẢ người chơi về 0!"
             
         await interaction.response.send_message(message, ephemeral=True)
 
@@ -256,7 +200,6 @@ class AdminCog(commands.Cog):
             return
 
         # Simply add negative points using existing db method
-        # This handles concurrency better than read-modify-write here
         await self.db.add_points(user.id, interaction.guild_id, -points)
         
         await interaction.response.send_message(
@@ -322,10 +265,15 @@ class AdminCog(commands.Cog):
         await self.db.set_channel_config(interaction.channel_id, interaction.guild_id, "xephinh")
         await interaction.response.send_message(f"✅ Đã đặt kênh này làm kênh chuyên **Xếp Hình (Tetris)**!\nGõ `/start` để chơi ngay.", ephemeral=True)
     
-
+    @app_commands.command(name="kenh-cau-ca", description="⚙️ Đặt kênh này làm kênh Câu Cá")
+    @app_commands.checks.has_permissions(administrator=True)
+    async def set_cauca_channel(self, interaction: discord.Interaction):
+        """Đặt kênh câu cá"""
+        await self.db.set_channel_config(interaction.channel_id, interaction.guild_id, "cauca")
+        await interaction.response.send_message(f"✅ Đã đặt kênh này làm kênh chuyên **Câu Cá (Fishing)**!\nGõ `/start` để chơi ngay.", ephemeral=True)
+    
 
 
 async def setup(bot: commands.Bot):
     """Setup function cho cog"""
-    db = DatabaseManager(config.DATABASE_PATH)
-    await bot.add_cog(AdminCog(bot, db))
+    await bot.add_cog(AdminCog(bot, bot.db))

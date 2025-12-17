@@ -7,7 +7,7 @@ import json
 from typing import Optional, Dict
 import config
 from utils import emojis
-from database.db_manager import DatabaseManager
+
 
 # --- CONSTANTS & CONFIGURATION ---
 
@@ -713,7 +713,7 @@ class InventorySelect(discord.ui.Select):
         await interaction.response.send_message("🏪 **Bạn muốn vào cửa hàng nào?**", view=view, ephemeral=True)
 
 class CauCaCog(commands.Cog):
-    def __init__(self, bot: commands.Bot, db: DatabaseManager):
+    def __init__(self, bot: commands.Bot, db):
         self.bot = bot
         self.db = db
 
@@ -1706,5 +1706,4 @@ class CauCaCog(commands.Cog):
         await interaction.response.send_message(f"💰 Đã bán sạch cá và nhận được **{total_payout:,}** Coinz {emojis.ANIMATED_EMOJI_COIZ}!")
 
 async def setup(bot: commands.Bot):
-    db = DatabaseManager(config.DATABASE_PATH)
-    await bot.add_cog(CauCaCog(bot, db))
+    await bot.add_cog(CauCaCog(bot, bot.db))

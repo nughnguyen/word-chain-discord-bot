@@ -2,10 +2,10 @@ import discord
 from discord.ext import commands
 from discord import app_commands
 import config
-from database.db_manager import DatabaseManager
+
 
 class LobbyCog(commands.Cog):
-    def __init__(self, bot: commands.Bot, db: DatabaseManager):
+    def __init__(self, bot: commands.Bot, db):
         self.bot = bot
         self.db = db
 
@@ -61,6 +61,21 @@ class LobbyCog(commands.Cog):
             else:
                  await interaction.response.send_message("❌ Lỗi: Game Xếp Hình chưa được load.", ephemeral=True)
 
+        elif game_type == "cauca":
+            cc_cog = self.bot.get_cog("CauCaCog")
+            if cc_cog:
+                # Try common command names
+                if hasattr(cc_cog, "fishing"):
+                    await cc_cog.fishing.callback(cc_cog, interaction)
+                elif hasattr(cc_cog, "fishing_cmd"):
+                    await cc_cog.fishing_cmd.callback(cc_cog, interaction)
+                elif hasattr(cc_cog, "cau_ca"):
+                    await cc_cog.cau_ca.callback(cc_cog, interaction)
+                else:
+                     await interaction.response.send_message("❌ Lỗi: Không tìm thấy lệnh bắt đầu game Câu Cá.", ephemeral=True)
+            else:
+                 await interaction.response.send_message("❌ Lỗi: Game Câu Cá chưa được load.", ephemeral=True)
+
         else:
              await interaction.response.send_message("❌ Loại game không hợp lệ.", ephemeral=True)
 
@@ -111,5 +126,4 @@ class LobbyCog(commands.Cog):
                  await interaction.response.send_message("❌ Lỗi cog.", ephemeral=True)
 
 async def setup(bot: commands.Bot):
-    db = DatabaseManager(config.DATABASE_PATH)
-    await bot.add_cog(LobbyCog(bot, db))
+    await bot.add_cog(LobbyCog(bot, bot.db))

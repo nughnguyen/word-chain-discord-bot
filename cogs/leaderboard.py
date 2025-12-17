@@ -7,11 +7,11 @@ from discord import app_commands
 
 import config
 from utils import embeds, emojis
-from database.db_manager import DatabaseManager
+
 
 
 class LeaderboardCog(commands.Cog):
-    def __init__(self, bot: commands.Bot, db: DatabaseManager):
+    def __init__(self, bot: commands.Bot, db):
         self.bot = bot
         self.db = db
     
@@ -254,5 +254,4 @@ class LeaderboardCog(commands.Cog):
 
 async def setup(bot: commands.Bot):
     """Setup function cho cog"""
-    db = DatabaseManager(config.DATABASE_PATH)
-    await bot.add_cog(LeaderboardCog(bot, db))
+    await bot.add_cog(LeaderboardCog(bot, bot.db))

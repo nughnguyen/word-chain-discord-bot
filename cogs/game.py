@@ -9,16 +9,14 @@ from typing import Optional
 import random
 import time
 import json
-import aiosqlite
 
 import config
 from utils import embeds, emojis
 from utils.validator import WordValidator
-from database.db_manager import DatabaseManager
 
 
 class GameCog(commands.Cog):
-    def __init__(self, bot: commands.Bot, db: DatabaseManager):
+    def __init__(self, bot: commands.Bot, db):
         self.bot = bot
         self.db = db
         self.validators = {}  # Cache validators cho mỗi ngôn ngữ
@@ -147,13 +145,8 @@ class GameCog(commands.Cog):
             is_bot_challenge=is_bot_challenge
         )
         
-
-        async with aiosqlite.connect(config.DATABASE_PATH) as db:
-            await db.execute(
-                "UPDATE game_states SET players = ?, turn_start_time = ? WHERE channel_id = ?",
-                (json.dumps(players_list), time.time(), channel.id)
-            )
-            await db.commit()
+        # Use Suapbase method instead of raw sqlite
+        await self.db.update_game_players(channel.id, players_list, time.time())
         
         start_embed = discord.Embed(
             title=f"{emojis.START} Game Bắt Đầu! {emojis.CELEBRATION}",
@@ -712,6 +705,4 @@ class GameCog(commands.Cog):
 
 async def setup(bot: commands.Bot):
     """Setup function cho cog"""
-    db = DatabaseManager(config.DATABASE_PATH)
-    await db.initialize()
-    await bot.add_cog(GameCog(bot, db))
+    await bot.add_cog(GameCog(bot, bot.db))

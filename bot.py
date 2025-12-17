@@ -9,7 +9,8 @@ import os
 
 import config
 from utils import emojis
-from database.db_manager import DatabaseManager
+from utils import emojis
+# from database.db_manager import DatabaseManager # Removed SQLite manager
 
 # Intents
 intents = discord.Intents.default()
@@ -25,7 +26,7 @@ class WordChainBot(commands.Bot):
             intents=intents,
             help_command=None  # Sử dụng custom help command
         )
-        self.db = DatabaseManager(config.DATABASE_PATH)
+        self.db = None
     
     async def setup_hook(self):
         """Load all cogs and initialize services"""
@@ -40,8 +41,21 @@ class WordChainBot(commands.Bot):
         from utils.dictionary_api import init_dictionary_service
 
         # Initialize Database
-        await self.db.initialize()
-        print("  ✅ Database initialized")
+        print("  🗄️  Initializing Database...")
+        if config.SUPABASE_URL and config.SUPABASE_KEY:
+            try:
+                from database.supabase_manager import SupabaseManager
+                self.db = SupabaseManager(config.SUPABASE_URL, config.SUPABASE_KEY)
+                await self.db.initialize()
+                print(f"  ✅ Using Supabase Database ({config.SUPABASE_URL})")
+            except Exception as e:
+                print(f"  ❌ Failed to connect to Supabase: {e}")
+                # Don't fallback to SQLite to avoid creating local DB file
+                raise e 
+        else:
+            print("  ❌ SUPABASE_URL or SUPABASE_KEY missing in .env")
+            print("  Please configure Supabase to continue.")
+            raise ValueError("Missing Supabase Configuration")
         
         # Load fallback word lists từ files
         fallback_words = {'vi': set(), 'en': set()}
@@ -200,7 +214,10 @@ def main():
     try:
         print(f"{emojis.START} Starting Word Chain Bot...")
         print(f"  📝 Loading configuration...")
-        print(f"  🗄️  Database: {config.DATABASE_PATH}")
+        if config.SUPABASE_URL:
+             print(f"  🗄️  Database: Supabase")
+        else:
+             print(f"  🗄️  Database: {config.DATABASE_PATH}")
         print(f"  🌍 Default Language: {config.DEFAULT_LANGUAGE}")
         print(f"  ⏰ Turn Timeout: {config.TURN_TIMEOUT}s")
         print()
