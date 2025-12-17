@@ -1401,7 +1401,7 @@ class CauCaCog(commands.Cog):
         embed = discord.Embed(title="🪱 CỬA HÀNG MỒI CÂU", description="Chọn loại mồi bạn muốn mua bên dưới.", color=discord.Color.dark_green())
         
         for key, info in BAITS.items():
-            if info.get("is_special"): continue # Skip special items if not purchasable? Or keep magnet?
+
             # User mentioned price for 1 bait
             embed.add_field(
                 name=f"{info['emoji']} {info['name']}",
