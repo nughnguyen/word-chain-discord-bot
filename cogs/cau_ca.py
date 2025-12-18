@@ -1085,13 +1085,17 @@ class CauCaCog(commands.Cog):
         new_rod_type = None
         rod_broken_msg = ""
         
-        if not treasure_found and random.uniform(0, 100) < treasure_chance:
-            # TREASURE EVENT
+        # TREASURE CHECK
+        treasure_chance = min(15, 2 + (luck * 0.002))
+        treasure_found = False
+        treasure_embed_desc = ""
+        
+        if random.uniform(0, 100) < treasure_chance:
+            treasure_found = True
             chest_idx = min(len(TREASURES)-1, int(random.triangular(0, len(TREASURES)-1, 0 + luck/50)))
             chest = TREASURES[chest_idx]
             
-            # Loot Logic: Can receive MULTIPLE types of rewards
-            reward_msg = ""
+            # Loot Logic
             rewards_list = []
             
             # 1. Coinz (Always)
@@ -1103,14 +1107,11 @@ class CauCaCog(commands.Cog):
             
             # 2. Fish (50% Chance)
             if random.random() < 0.5:
-                # Weights based on luck/rarity logic or just simple pool
                 weights = [f.get("spawn_rate", 10) for f in fish_pool]
                 selected_fish = random.choices(fish_pool, weights=weights, k=1)[0]
-                
                 min_qty = 3 + (chest_idx * 2)
                 max_qty = 10 + (chest_idx * 5)
                 quantity = random.randint(min_qty, max_qty)
-                
                 unit_value = int(selected_fish['base_value'] * 1.5)
                 total_f_val = unit_value * quantity
                 
@@ -1118,11 +1119,9 @@ class CauCaCog(commands.Cog):
                 f_name = selected_fish['name']
                 if f_name not in inventory['fish']:
                     inventory['fish'][f_name] = {"count": 0, "total_value": 0}
-                
                 inventory['fish'][f_name]["count"] += quantity
                 inventory['fish'][f_name]["total_value"] += total_f_val
                 stats["total_caught"] = stats.get("total_caught", 0) + quantity
-                
                 rewards_list.append(f"• **{quantity}x {selected_fish['emoji']} {selected_fish['name']}**")
 
             # 3. Bait (35% Chance)
@@ -1130,11 +1129,9 @@ class CauCaCog(commands.Cog):
                  bait_keys = list(BAITS.keys())
                  selected_bait_key = random.choice(bait_keys)
                  selected_bait = BAITS[selected_bait_key]
-                 
                  min_qty = 5 + (chest_idx * 2)
                  max_qty = 10 + (chest_idx * 5)
                  quantity = random.randint(min_qty, max_qty)
-                 
                  if 'baits' not in inventory: inventory['baits'] = {}
                  inventory['baits'][selected_bait_key] = inventory['baits'].get(selected_bait_key, 0) + quantity
                  rewards_list.append(f"• **{quantity}x {selected_bait['emoji']} {selected_bait['name']}**")
@@ -1144,246 +1141,258 @@ class CauCaCog(commands.Cog):
                 charm_keys = list(CHARMS.keys())
                 c_key = random.choice(charm_keys)
                 c_info = CHARMS[c_key]
-                
-                duration_min = c_info["duration_min"]
-                duration_max = c_info["duration_max"]
-                duration_sec = random.randint(duration_min * 60, duration_max * 60)
+                duration_sec = random.randint(c_info["duration_min"] * 60, c_info["duration_max"] * 60)
                 minutes = duration_sec // 60
-                
                 if "charms" not in inventory: inventory["charms"] = []
                 new_charm = {"key": c_key, "duration": duration_sec, "name": c_info["name"]}
                 inventory["charms"].append(new_charm)
                 rewards_list.append(f"• **{c_info['emoji']} {c_info['name']}** ({minutes}p)")
             
-            reward_msg = "\n".join(rewards_list)
+            treasure_embed_desc = f"**{chest['emoji']} {chest['name']}**\n" + "\n".join(rewards_list)
 
-            # DRAGON BALL DROP CHANCE
-            # 0.5% chance from any chest to get a random Dragon Ball
+            # DRAGON BALL DROP CHANCE (0.5%)
             if random.random() < 0.005: 
                 ball_num = random.randint(1, 7)
                 user_balls = inventory.get("dragon_balls", [])
-                
                 if ball_num not in user_balls:
                      user_balls.append(ball_num)
                      user_balls.sort()
                      inventory["dragon_balls"] = user_balls
-                     
                      ball_emoji = DRAGON_BALLS[ball_num]["emoji"]
-                     reward_msg += f"\n\n🔥 **HUYỀN THOẠI!** Bạn đã tìm thấy **Ngọc Rồng {ball_num} Sao** {ball_emoji}! ({len(user_balls)}/7)"
-                     
+                     treasure_embed_desc += f"\n\n🔥 **HUYỀN THOẠI!** Bạn đã tìm thấy **Ngọc Rồng {ball_num} Sao** {ball_emoji}! ({len(user_balls)}/7)"
                      if len(user_balls) == 7:
-                         reward_msg += f"\n🐲 **BẠN ĐÃ CÓ ĐỦ 7 VIÊN NGỌC RỒNG!** Hãy dùng lệnh `/goi-rong` để triệu hồi Rồng Thần!"
+                         treasure_embed_desc += f"\n🐲 **BẠN ĐÃ CÓ ĐỦ 7 VIÊN NGỌC RỒNG!** Hãy dùng lệnh `/goi-rong` để triệu hồi Rồng Thần!"
                 else:
-                     # Duplicate ball reward? 
-                     # Maybe convert to money?
-                     reward_msg += f"\n\n🔸 Bạn tìm thấy Ngọc Rồng {ball_num} Sao, nhưng đã sở hữu rồi. (Nhận 100k Coiz an ủi)"
+                     treasure_embed_desc += f"\n\n🔸 Bạn tìm thấy Ngọc Rồng {ball_num} Sao, nhưng đã sở hữu rồi. (Nhận 100k Coiz an ủi)"
                      await self.db.add_points(user_id, interaction.guild_id, 100000)
 
-            embed = discord.Embed(title="🎁 KHO BÁU!", color=discord.Color.gold())
-            embed.description = f"Bạn tìm thấy **{chest['emoji']} {chest['name']}**!\n{reward_msg}"
-            
-        else:
-            # FISHING LOOP
-            desc_lines = []
-            
-            for _ in range(loops):
-                # Calculate current catch stats (handles Magnet Sub-Bait)
-                eff_luck = luck
-                eff_power = power
-                
-                # Logic for Sub-Bait (Magnet Only)
-                if is_magnet and sub_bait_key:
-                    if baits_inv.get(sub_bait_key, 0) > 0:
-                        baits_inv[sub_bait_key] -= 1
-                        if baits_inv[sub_bait_key] <= 0:
-                            if sub_bait_key in baits_inv: del baits_inv[sub_bait_key]
-                            stats["magnet_sub_bait"] = None
-                            
-                        sb_info = BAITS.get(sub_bait_key, {})
-                        eff_luck += sb_info.get("luck", 0)
-                        eff_power += sb_info.get("power", 0)
-                    else:
-                        stats["magnet_sub_bait"] = None
+        # FISHING LOOP (ALWAYS RUNS)
+        desc_lines = []
+        if treasure_found:
+             desc_lines.append(f"🎁 **KHO BÁU TÌM THẤY!**\n{treasure_embed_desc}\n\n🎣 **KẾT QUẢ CÂU:**")
 
-                # MISS CHANCE (Tỉ lệ xảy cá)
-                # Base success: 70%. Luck improves it.
-                # Formula: 70 + (Luck * 0.2)
-                success_chance = 70 + (eff_luck * 0.2)
-                if success_chance > 100: success_chance = 100
-                
-                if random.uniform(0, 100) > success_chance:
-                    desc_lines.append("💨 **Hụt!** Cá đã trốn thoát...")
-                    continue
-
-                # Rarity selection
-                # Luck/Power affects weights? 
-                
-                luck_bonus = eff_luck * 0.15
-                roll = random.uniform(0, 100) + luck_bonus
-                
-                rarity = "Common"
-                if roll > 120: rarity = "Exotic" # Alien/Secret?
-                elif roll > 110: rarity = "Mythical"
-                elif roll > 95: rarity = "Legendary"
-                elif roll > 80: rarity = "Epic"
-                elif roll > 60: rarity = "Rare"
-                elif roll > 40: rarity = "Uncommon"
-                
-                # Pick fish
-                # Note: Currently fish_pool is list of dicts. We don't have explicit rarity in fish dicts in BIOMES constant yet?
-                # The BIOMES constant has "fish": [{name, base_value, min, max, emoji}...]
-                # We need to assign rarity or pick based on value?
-                # For now, pick random fish from pool, then apply size multiplier based on power/rarity.
-                
-                if not fish_pool: break
-                
-                # Apply weight selection based on 'spawn_rate' modified by Luck
-                # Strategy: If spawn_rate is low (rare fish), Luck boosts its weight more significantly.
-                weights = []
-                for f in fish_pool:
-                     base_rate = f.get("spawn_rate", 10)
-                     if base_rate <= 20: 
-                          # Boost rare fish: +0.1% weight per 1 Luck (Reduced further)
-                          # Example: Luck 1000 => +100% chance (2x) - Very hard scaling
-                          w = base_rate * (1 + (eff_luck * 0.001))
-                     else:
-                          # Common fish: Slight boost or neutral
-                          w = base_rate
-                     weights.append(w)
-                     
-                selected_fish = random.choices(fish_pool, weights=weights, k=1)[0]
-                
-                # Size calculation
-                # Power affects size directly and skews distribution towards Max Size
-                min_s = selected_fish['min_size']
-                max_s = selected_fish['max_size']
-                
-                # Calculate "Peak" of the size distribution based on Power
-                # Max power for scaling ~ 500 (can go higher but diminishes)
-                power_factor = min(1.0, eff_power / 500) 
-                
-                # If power is high, the "peak" probability moves towards max_s
-                # random.triangular(low, high, mode)
-                mode_s = min_s + (max_s - min_s) * (0.2 + 0.8 * power_factor) # At 0 power, peak is at 20%. At max, peak is at 100%.
-                
-                raw_size = random.triangular(min_s, max_s, mode_s)
-                
-                # "Limit Break": Power allows exceeding max size slightly
-                # 0.02% per Power point
-                final_size_mul = 1.0 + (eff_power * 0.0002)
-                size = round(raw_size * final_size_mul, 2)
-                
-                min_s = selected_fish['min_size']
-
-                
-                # Value calculation
-                # Value = Base * (Size / AvgSize) * RarityMult?
-                # Simplify: Value = Base + (Size * 2)
-                base_v = selected_fish['base_value']
-                rarity_mul = RARITIES.get(rarity, {}).get("mul", 1.0)
-                val = int((base_v + (size * 5)) * rarity_mul)
-                
-                # Crit?
-                if random.random() < 0.05:
-                    val *= 2
-                    size_bonus = "(CRIT!)"
-                
-                # Add to result
-                result_list.append({
-                    "name": selected_fish['name'], 
-                    "value": val, 
-                    "emoji": selected_fish['emoji'],
-                    "size": size,
-                    "rarity": rarity
-                })
-                
-                # Update Inventory
-                if 'fish' not in inventory: inventory['fish'] = {}
-                f_name = selected_fish['name']
-                if f_name not in inventory['fish']:
-                    inventory['fish'][f_name] = {"count": 0, "total_value": 0}
-                    
-                inventory['fish'][f_name]["count"] += 1
-                inventory['fish'][f_name]["total_value"] += val
-                
-                stats["total_caught"] = stats.get("total_caught", 0) + 1
-                
-                total_xp += int(val / 10) + 5
-                total_val += val
-                
-                # Get rarity info
-                r_info = RARITIES.get(rarity, {"emoji": "✨", "color": 0xFFFFFF})
-                r_emoji = r_info.get("emoji", "✨")
-                
-                # Translate rarity
-                rarity_vi = {
-                    "Common": "Thường", "Uncommon": "Khá", "Rare": "Hiếm", 
-                    "Epic": "Sử Thi", "Legendary": "Huyền Thoại", 
-                    "Mythical": "Thần Thoại", "Exotic": "Cực Phẩm"
-                }.get(rarity, rarity)
-
-                desc_lines.append(f"{r_emoji} **{rarity_vi}** | {selected_fish['emoji']} **{selected_fish['name']}** ({size}cm)")
-
-            # Check Rod Break Status before creating Embed
-            rod_broken_msg = ""
-            user_dura = inventory.get("rod_durability", {}).get(rod_key)
-            new_rod_type = None # Default: No change
+        for _ in range(loops):
+            # Calculate current catch stats (handles Magnet Sub-Bait)
+            eff_luck = luck
+            eff_power = power
             
-            if user_dura is not None and user_dura <= 0:
-                 # Remove rod from inventory
-                 if "rods" in inventory and rod_key in inventory["rods"]:
-                     inventory["rods"].remove(rod_key)
-                 if "rod_durability" in inventory and rod_key in inventory["rod_durability"]:
-                     del inventory["rod_durability"][rod_key]
-                 
-                 # Prepare to reset rod to Plastic
-                 new_rod_type = "Plastic Rod"
-                 rod_broken_msg = f"\n\n💥 **CẦN CÂU ĐÃ GÃY!**\nCần **{RODS[rod_key]['name']}** của bạn đã hỏng hoàn toàn do hết độ bền. Hãy mua cần mới!"
-
-            title = "🎣 CÂU ĐƯỢC CÁ!"
-            if is_magnet: title = f"🧲 NAM CHÂM HÚT ĐƯỢC {len(result_list)} CÁ!"
-            
-            embed = discord.Embed(title=title, color=embed_color)
-            embed.description = "\n".join(desc_lines)
-            embed.add_field(name="Tổng kết", value=f"Exp: +{total_xp} | Giá trị: {total_val:,} Coinz {emojis.ANIMATED_EMOJI_COIZ}{rod_broken_msg}")
-            
-            dura_info = ""
-            if user_dura is not None:
-                max_dura = RODS[rod_key]['durability']
-                dura_info = f" | Độ bền: {max(0, user_dura)}/{max_dura}"
-            
-            # Level Up Logic
-            current_level = stats.get("level", 1)
-            current_xp = stats.get("xp", 0) + total_xp
-            
-            # Recalculate level
-            # Formula: Next Level XP = 1000 * (1.5 ^ (level - 1))
-            # Loop incase of multi-level up
-            leveled_up = False
-            while True:
-                req_xp = int(1000 * (1.5 ** (current_level - 1)))
-                if current_xp >= req_xp:
-                    current_xp -= req_xp
-                    current_level += 1
-                    leveled_up = True
+            # Logic for Sub-Bait (Magnet Only)
+            if is_magnet and sub_bait_key:
+                # Apply sub-bait stats to THIS catch
+                sb_data = BAITS[sub_bait_key]
+                eff_luck += sb_data.get("luck", 0)
+                eff_power += sb_data.get("power", 0)
+                
+                # Consume sub-bait?
+                # "For each fish caught in a Magnet Bait attempt, consume 1 unit of the chosen secondary bait"
+                # Check if available
+                if baits_inv.get(sub_bait_key, 0) > 0:
+                     baits_inv[sub_bait_key] -= 1
+                     if baits_inv[sub_bait_key] <= 0:
+                         del baits_inv[sub_bait_key]
+                         stats["current_sub_bait"] = None # Reset if out
+                         sub_bait_key = None # Stop applying for subsequent loops
                 else:
-                    break
-            
-            stats["xp"] = current_xp
-            stats["level"] = current_level
-            
-            if leveled_up:
-                try:
-                    await interaction.channel.send(f"🎉 **LEVEL UP!** Chúc mừng <@{user_id}> đã đạt **Level {current_level}**! Mở khóa các khu vực mới!")
-                except: pass
+                     sub_bait_key = None
 
-            dura_info = ""
-            if user_dura is not None:
-                max_dura = RODS[rod_key]['durability']
-                dura_info = f" | Độ bền: {max(0, user_dura)}/{max_dura}"
+            # MISS CHANCE (Tỉ lệ xảy cá)
+            # Base success: 70%. Luck improves it.
+            # Formula: 70 + (Luck * 0.2)
+            success_chance = 70 + (eff_luck * 0.2)
+            if success_chance > 100: success_chance = 100
+            
+            if random.uniform(0, 100) > success_chance:
+                desc_lines.append("💨 **Hụt!** Cá đã trốn thoát...")
+                continue
+
+            # Rarity selection
+            # Luck/Power affects weights? 
+            
+            luck_bonus = eff_luck * 0.15
+            roll = random.uniform(0, 100) + luck_bonus
+            
+            rarity = "Common"
+            if roll > 120: rarity = "Exotic" # Alien/Secret?
+            elif roll > 110: rarity = "Mythical"
+            elif roll > 95: rarity = "Legendary"
+            elif roll > 80: rarity = "Epic"
+            elif roll > 60: rarity = "Rare"
+            elif roll > 40: rarity = "Uncommon"
+            
+            # Pick fish
+            # Note: Currently fish_pool is list of dicts. We don't have explicit rarity in fish dicts in BIOMES constant yet?
+            # The BIOMES constant has "fish": [{name, base_value, min, max, emoji}...]
+            # We need to assign rarity or pick based on value?
+            # For now, pick random fish from pool, then apply size multiplier based on power/rarity.
+            
+            if not fish_pool: break
+            
+            # Apply weight selection based on 'spawn_rate' modified by Luck
+            # Strategy: If spawn_rate is low (rare fish), Luck boosts its weight more significantly.
+            weights = []
+            for f in fish_pool:
+                 base_rate = f.get("spawn_rate", 10)
+                 if base_rate <= 20: 
+                      # Boost rare fish: +0.1% weight per 1 Luck (Reduced further)
+                      # Example: Luck 1000 => +100% chance (2x) - Very hard scaling
+                      w = base_rate * (1 + (eff_luck * 0.001))
+                 else:
+                      # Common fish: Slight boost or neutral
+                      w = base_rate
+                 weights.append(w)
+                 
+            selected_fish = random.choices(fish_pool, weights=weights, k=1)[0]
+            
+            # Size calculation
+            # Power affects size directly and skews distribution towards Max Size
+            min_s = selected_fish['min_size']
+            max_s = selected_fish['max_size']
+            
+            # Calculate "Peak" of the size distribution based on Power
+            # Max power for scaling ~ 500 (can go higher but diminishes)
+            power_factor = min(1.0, eff_power / 500) 
+            
+            # If power is high, the "peak" probability moves towards max_s
+            # random.triangular(low, high, mode)
+            mode_s = min_s + (max_s - min_s) * (0.2 + 0.8 * power_factor) # At 0 power, peak is at 20%. At max, peak is at 100%.
+            
+            raw_size = random.triangular(min_s, max_s, mode_s)
+            
+            # "Limit Break": Power allows exceeding max size slightly
+            # 0.02% per Power point
+            final_size_mul = 1.0 + (eff_power * 0.0002)
+            size = round(raw_size * final_size_mul, 2)
+            
+            min_s = selected_fish['min_size']
+
+            
+            # Value calculation
+            # Value = Base * (Size / AvgSize) * RarityMul?
+            # Simplify: Value = Base + (Size * 2)
+            base_v = selected_fish['base_value']
+            rarity_mul = RARITIES.get(rarity, {}).get("mul", 1.0)
+            val = int((base_v + (size * 5)) * rarity_mul)
+            
+            # Crit?
+            if random.random() < 0.05:
+                val *= 2
+                size_bonus = "(CRIT!)"
+            
+            # Add to result
+            result_list.append({
+                "name": selected_fish['name'], 
+                "value": val, 
+                "emoji": selected_fish['emoji'],
+                "size": size,
+                "rarity": rarity
+            })
+            
+            # Update Inventory
+            if 'fish' not in inventory: inventory['fish'] = {}
+            f_name = selected_fish['name']
+            if f_name not in inventory['fish']:
+                inventory['fish'][f_name] = {"count": 0, "total_value": 0}
                 
-            req_xp_next = int(1000 * (1.5 ** (current_level - 1)))
-            embed.set_footer(text=f"Level: {current_level} | XP: {current_xp}/{req_xp_next}{dura_info}")
+            inventory['fish'][f_name]["count"] += 1
+            inventory['fish'][f_name]["total_value"] += val
+            
+            stats["total_caught"] = stats.get("total_caught", 0) + 1
+            total_val += val
+                
+            # XP Calculation: Scales with Value (Size & Rarity included) but boosted further
+            # Base Logic: 100 Coin Value = 1 XP. 
+            # New Logic: Boost for high rarity to incentivize catching big rare fish.
+            # Rarity XP Multiplier: Common=1, Uncommon=1.5, Rare=2.5, Epic=5, Legendary=20, Mythical=100
+            xp_rarity_mul = {
+                "Common": 1.0, 
+                "Uncommon": 1.2, 
+                "Rare": 1.5,
+                "Epic": 2.5, 
+                "Legendary": 10.0, 
+                "Mythical": 50.0,
+                "Exotic": 100.0
+            }.get(rarity, 1.0)
+            
+            # Formula: Base XP (Value/100) * RarityXP * SizeFactor (implicit in value)
+            xp_gain = int((val / 50) * xp_rarity_mul) # Increased base conversion (val/50 instead of 100)
+            if xp_gain < 10: xp_gain = 10
+            
+            total_xp += xp_gain
+            
+            # Get rarity info
+            r_info = RARITIES.get(rarity, {"emoji": "✨", "color": 0xFFFFFF})
+            r_emoji = r_info.get("emoji", "✨")
+            
+            # Translate rarity
+            rarity_vi = {
+                "Common": "Thường", "Uncommon": "Khá", "Rare": "Hiếm", 
+                "Epic": "Sử Thi", "Huyền Thoại": "Huyền Thoại", 
+                "Mythical": "Thần Thoại", "Exotic": "Cực Phẩm"
+            }.get(rarity, rarity)
+
+            desc_lines.append(f"{r_emoji} **{rarity_vi}** | {selected_fish['emoji']} **{selected_fish['name']}** ({size}cm)")
+
+        # Check Rod Break Status before creating Embed
+        rod_broken_msg = ""
+        user_dura = inventory.get("rod_durability", {}).get(rod_key)
+        new_rod_type = None # Default: No change
+        
+        if user_dura is not None and user_dura <= 0:
+             # Remove rod from inventory
+             if "rods" in inventory and rod_key in inventory["rods"]:
+                 inventory["rods"].remove(rod_key)
+             if "rod_durability" in inventory and rod_key in inventory["rod_durability"]:
+                 del inventory["rod_durability"][rod_key]
+             
+             # Prepare to reset rod to Plastic
+             new_rod_type = "Plastic Rod"
+             rod_broken_msg = f"\n\n💥 **CẦN CÂU ĐÃ GÃY!**\nCần **{RODS[rod_key]['name']}** của bạn đã hỏng hoàn toàn do hết độ bền. Hãy mua cần mới!"
+
+        title = "🎣 CÂU ĐƯỢC CÁ!"
+        if is_magnet: title = f"🧲 NAM CHÂM HÚT ĐƯỢC {len(result_list)} CÁ!"
+        if treasure_found: title += " & KHO BÁU!"
+        
+        embed = discord.Embed(title=title, color=embed_color)
+        embed.description = "\n".join(desc_lines)
+        embed.add_field(name="Tổng kết", value=f"Exp: +{total_xp} | Giá trị: {total_val:,} Coinz {emojis.ANIMATED_EMOJI_COIZ}{rod_broken_msg}")
+        
+        dura_info = ""
+        if user_dura is not None:
+            max_dura = RODS[rod_key]['durability']
+            dura_info = f" | Độ bền: {max(0, user_dura)}/{max_dura}"
+        
+        # Level Up Logic
+        current_level = stats.get("level", 1)
+        current_xp = stats.get("xp", 0) + total_xp
+        
+        # Recalculate level
+        # Formula: Next Level XP = 1000 * (1.5 ^ (level - 1))
+        # Loop incase of multi-level up
+        leveled_up = False
+        while True:
+            req_xp = int(1000 * (1.5 ** (current_level - 1)))
+            if current_xp >= req_xp:
+                current_xp -= req_xp
+                current_level += 1
+                leveled_up = True
+            else:
+                break
+        
+        stats["xp"] = current_xp
+        stats["level"] = current_level
+        
+        if leveled_up:
+            try:
+                await interaction.channel.send(f"🎉 **LEVEL UP!** Chúc mừng <@{user_id}> đã đạt **Level {current_level}**! Mở khóa các khu vực mới!")
+            except: pass
+
+        dura_info = ""
+        if user_dura is not None:
+            max_dura = RODS[rod_key]['durability']
+            dura_info = f" | Độ bền: {max(0, user_dura)}/{max_dura}"
+            
+        req_xp_next = int(1000 * (1.5 ** (current_level - 1)))
+        embed.set_footer(text=f"Level: {current_level} | XP: {current_xp}/{req_xp_next}{dura_info}")
 
         # Save Data
         save_kwargs = {"inventory": inventory, "stats": stats}
