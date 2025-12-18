@@ -57,28 +57,32 @@ class HelpView(discord.ui.View):
         )
         
         if choice == "Trang Chủ":
-            embed.title = "HELP MENU"
+            embed.title = "✨ CHÀO MỪNG ĐẾN VỚI MARBLE SODA BOT ✨"
+            embed.description = (
+                "**Marble Soda** là Bot giải trí đa năng số 1 Việt Nam! 🇻🇳\n"
+                "Tham gia ngay vào thế giới minigame sôi động, hệ thống kinh tế độc đáo và các giải đấu hấp dẫn.\n\n"
+                "🤖 **GIỚI THIỆU CHUNG:**\n"
+                "> Bot cung cấp hệ thống **Câu Cá RPG** cày cuốc, các minigame trí tuệ như **Nối Từ, Vua Tiếng Việt** và các trò chơi may mắn như **Bầu Cua**.\n"
+                "\n"
+                "📜 **DANH MỤC MENU DƯỚI ĐÂY:**\n"
+                "📘 **Hướng Dẫn Tân Thủ**: Cách kiếm Coiz và luật chơi cơ bản.\n"
+                "🎣 **Câu Cá (Fishing)**: Hệ thống RPG, nâng cấp cần, săn Boss.\n"
+                "🎮 **Games Commands**: Lệnh chơi Nối Từ, Bầu Cua, VTV.\n"
+                "🏆 **Leaderboard**: Xem Top đại gia và cao thủ server.\n"
+                "💎 **Donation**: Nạp ủng hộ Bot & Nhận quyền lợi VIP."
+            )
             embed.color = 0x2b2d31
             
-            # Bot Info
+            # Main Commands Highlights
             embed.add_field(
-                name=f"{emojis.ANIMATED_EMOJI_DISCORD} **BOT INFO** {emojis.ANIMATED_EMOJI_DISCORD}",
-                value=f"{emojis.BAR} {emojis.ANIMATED_EMOJI_DOT} Prefix: `{config.COMMAND_PREFIX}`",
-                inline=False
-            )
-            
-            # Commands List
-            commands_list = (
-                f"{emojis.BAR} {emojis.ANIMATED_EMOJI_DOT} Câu Cá (Fishing)\n"
-                f"{emojis.BAR} {emojis.ANIMATED_EMOJI_DOT} Games Commands\n"
-                f"{emojis.BAR} {emojis.ANIMATED_EMOJI_DOT} Leaderboard Commands\n"
-                f"{emojis.BAR} {emojis.ANIMATED_EMOJI_DOT} Admin Commands\n"
-                f"{emojis.BAR} {emojis.ANIMATED_EMOJI_DOT} Utility Commands\n"
-                f"{emojis.BAR} {emojis.ANIMATED_EMOJI_DOT} Donation"
-            )
-            embed.add_field(
-                name=f"{emojis.ANIMATED_EMOJI_DISCORD} **BOT'S COMMANDS** {emojis.ANIMATED_EMOJI_DISCORD}",
-                value=commands_list,
+                name="🚀 **LỆNH HỆ THỐNG & CÀI ĐẶT**",
+                value=(
+                    f"`/help` - Hiển thị Menu hướng dẫn tổng hợp\n"
+                    f"`/donation` - Hệ thống nạp Coiz & Quyền lợi VIP\n"
+                    f"`/set-game-channel` - Cài đặt kênh Minigame (Admin)\n"
+                    f"`/kenh-cau-ca` - Cài đặt kênh Câu cá (Admin)\n"
+                    f"`/stats` - Xem hồ sơ cá nhân"
+                ),
                 inline=False
             )
 
@@ -86,17 +90,16 @@ class HelpView(discord.ui.View):
             ping = round(self.bot.latency * 1000)
             server_count = len(self.bot.guilds)
             user_count = sum(guild.member_count for guild in self.bot.guilds)
-            command_count = len(self.bot.tree.get_commands())
             
             status_text = (
-                f"{emojis.BAR} {emojis.ANIMATED_EMOJI_DOT} Current Ping: {ping}ms\n"
-                f"{emojis.BAR} {emojis.ANIMATED_EMOJI_DOT} Total Commands: {command_count}\n"
-                f"{emojis.BAR} {emojis.ANIMATED_EMOJI_DOT} Total Users: {user_count}\n"
-                f"{emojis.BAR} {emojis.ANIMATED_EMOJI_DOT} Total Servers: {server_count}"
+                f"📡 Ping: `{ping}ms`\n"
+                f"🏠 Servers: `{server_count}`\n"
+                f"👥 Users: `{user_count:,}`\n"
+                f"💻 Prefix: `{config.COMMAND_PREFIX}`"
             )
             
             embed.add_field(
-                name=f"{emojis.ANIMATED_EMOJI_DISCORD} **BOT'S STATUS** {emojis.ANIMATED_EMOJI_DISCORD}",
+                name="📊 **TRẠNG THÁI HỆ THỐNG**",
                 value=status_text,
                 inline=False
             )
@@ -143,40 +146,56 @@ class HelpView(discord.ui.View):
             embed.set_image(url="https://cdn.discordapp.com/attachments/1305556786304127097/1327687391267389632/thenoicez.gif?ex=6940eafd&is=693f997d&hm=332f39b7a027ecfebdead2cd326f57c1502020fff8922b78c8fdb623fa49a43b&")
 
         elif choice == "Câu Cá (Fishing)":
-            embed.description = "Hướng dẫn chi tiết hệ thống Câu Cá RPG:"
+            embed.title = "🎣 HƯỚNG DẪN CÂU CÁ (FISHING RPG)"
+            embed.description = (
+                "Chào mừng bạn đến với hệ thống **Câu Cá RPG** đỉnh cao! 🌊\n"
+                "Hãy trở thành **Vua Câu Cá** huyền thoại, sưu tập các loài cá quý hiếm và kiếm hàng tỷ Coiz!\n\n"
+                "**🎮 BẮT ĐẦU NGAY:**\n"
+                "> Gõ `/fish` tại kênh câu cá để thả câu.\n"
+                "> Gõ `/shop` để mua trang bị hỗ trợ.\n"
+                "> Gõ `/inventory` để xem chiến lợi phẩm."
+            )
             
             embed.add_field(
-                name="🎮 **Lệnh Cơ Bản**",
+                name="⚙️ **Cơ Chế Gameplay**",
                 value=(
-                    "`/fish` - Thả câu (Tại kênh cho phép). Mở menu Shop/Đổi cần/Đổi mồi.\n"
-                    "`/inventory` - Xem túi đồ: Cá, Cần, Mồi, Bùa Chú. Dùng bùa tại đây.\n"
-                    "`/shop` - Cửa hàng đa năng: Mua Mồi, Cần, Bùa Chú."
+                    f"{emojis.ANIMATED_EMOJI_DOT} **Power (Sức Mạnh)**: Giúp câu được **Cá To (Size to)**, bán được nhiều tiền hơn.\n"
+                    f"{emojis.ANIMATED_EMOJI_DOT} **Luck (May Mắn)**: Tăng tỷ lệ gặp **Cá Hiếm** (Legendary, Mythical...) và nhặt được **Kho Báu**.\n"
+                    f"{emojis.ANIMATED_EMOJI_DOT} **Độ Bền**: Mỗi lần câu sẽ giảm độ bền của cần. Khi về 0, cần sẽ bị gãy! (Trừ Cần Nhựa/Donator)."
+                ),
+                inline=False
+            )
+
+            embed.add_field(
+                name="🎒 **Trang Bị & Vật Phẩm**",
+                value=(
+                    f"🎣 **Cần Câu (Rods)**: Nâng cấp cần xịn để tăng mạnh Power & Luck. Cần càng đắt, độ bền càng cao.\n"
+                    f"🪱 **Mồi Câu (Baits)**: Buff chỉ số tạm thời. Đặc biệt **Nam Châm** {emojis.BAIT_MAGNET} giúp hút 2-5 con cá cùng lúc!\n"
+                    f"🧿 **Bùa Chú (Charms)**: Buff sức mạnh trong thời gian ngắn (có thể cộng dồn)."
+                ),
+                inline=False
+            )
+
+            embed.add_field(
+                name="🔥 **Tính Năng Đặc Sắc**",
+                value=(
+                    f"🌍 **Biomes (Khu Vực)**: Mở khóa các vùng đất mới (Biển, Trời, Núi Lửa...) để săn cá độc quyền giá trị cao.\n"
+                    f"👑 **Boss Fish**: Những loài cá Vua cực hiếm, xuất hiện ngẫu nhiên. Sưu tập đủ để nhận huy hiệu danh giá.\n"
+                    f"🐉 **Ngọc Rồng**: Tìm đủ **7 Viên Ngọc Rồng** từ Kho Báu để triệu hồi Rồng Thần ban điều ước **Coiz**!"
                 ),
                 inline=False
             )
             
             embed.add_field(
-                name="🎣 **Cơ Chế Play-to-Earn**",
+                name="💎 **Phần Thưởng & Lợi Ích**",
                 value=(
-                    "• **Biomes**: Mỗi khu vực có loại cá riêng.\n"
-                    "• **Rods (Cần Câu)**: Cần xịn tăng **Power** (Câu cá to) và **Luck** (Câu cá hiếm).\n"
-                    "• **Baits (Mồi)**: Tăng chỉ số. Đặc biệt **Nam Châm** hút nhiều cá cùng lúc!\n"
-                    "• **Charms (Bùa Chú)**: Buff Power/Luck/Exp trong thời gian ngắn (Cộng dồn).\n"
-                    "• **Treasure (Kho Báu)**: 2% cơ hội (tăng theo Luck) câu được rương chứa Coiz, Mồi, Cá, hoặc Bùa."
+                    f"💰 **Kiếm Coiz**: Bán cá để làm giàu, đua Top Tỷ Phú.\n"
+                    f"⭐ **Level Up**: Nhận XP từ mỗi lần câu để thăng cấp và mở khóa tính năng mới.\n"
+                    f"🏆 **Thành Tựu**: Sưu tập các Huy Hiệu (Badges) để khẳng định đẳng cấp."
                 ),
                 inline=False
             )
             
-            embed.add_field(
-                name="🏅 **Hệ Thống Thành Tựu**",
-                value=(
-                    "Mở khóa các **Huy Hiệu (Badges)** danh giá khi đạt mốc:\n"
-                    "• Số lượng cá câu được\n"
-                    "• Tổng tiền kiếm được\n"
-                    "• Bộ sưu tập Cần Câu"
-                ),
-                inline=False
-            )
             embed.set_image(url="https://cdn.discordapp.com/attachments/1305556786304127097/1327687391267389632/thenoicez.gif?ex=6940eafd&is=693f997d&hm=332f39b7a027ecfebdead2cd326f57c1502020fff8922b78c8fdb623fa49a43b&")
 
         elif choice == "Games Commands":
@@ -316,50 +335,51 @@ class Help(commands.Cog):
     @commands.hybrid_command(name="help", description="Hiển thị menu hướng dẫn")
     async def help_command(self, ctx):
         embed = discord.Embed(
-            title="HELP MENU",
-            color=0x2b2d31, # Dark background color
+            title="✨ CHÀO MỪNG ĐẾN VỚI MARBLE SODA BOT ✨",
+            description=(
+                "**Marble Soda** là Bot giải trí đa năng số 1 Việt Nam! 🇻🇳\n"
+                "Tham gia ngay vào thế giới minigame sôi động, hệ thống kinh tế độc đáo và các giải đấu hấp dẫn.\n\n"
+                "🤖 **GIỚI THIỆU CHUNG:**\n"
+                "> Bot cung cấp hệ thống **Câu Cá RPG** cày cuốc, các minigame trí tuệ như **Nối Từ, Vua Tiếng Việt** và các trò chơi may mắn như **Bầu Cua**.\n"
+                "\n"
+                "📜 **DANH MỤC MENU DƯỚI ĐÂY:**\n"
+                "📘 **Hướng Dẫn Tân Thủ**: Cách kiếm Coiz và luật chơi cơ bản.\n"
+                "🎣 **Câu Cá (Fishing)**: Hệ thống RPG, nâng cấp cần, săn Boss.\n"
+                "🎮 **Games Commands**: Lệnh chơi Nối Từ, Bầu Cua, VTV.\n"
+                "🏆 **Leaderboard**: Xem Top đại gia và cao thủ server.\n"
+                "💎 **Donation**: Nạp ủng hộ Bot & Nhận quyền lợi VIP."
+            ),
+            color=0x2b2d31,
             timestamp=datetime.datetime.now()
         )
         
-        # Bot Info
+        # Main Commands Highlights
         embed.add_field(
-            name=f"{emojis.ANIMATED_EMOJI_DISCORD} **BOT INFO** {emojis.ANIMATED_EMOJI_DISCORD}",
-            value=f"{emojis.BAR} {emojis.ANIMATED_EMOJI_DOT} Prefix: `{config.COMMAND_PREFIX}`",
+            name="🚀 **LỆNH HỆ THỐNG & CÀI ĐẶT**",
+            value=(
+                f"`/help` - Hiển thị Menu hướng dẫn tổng hợp\n"
+                f"`/donation` - Hệ thống nạp Coiz & Quyền lợi VIP\n"
+                f"`/set-game-channel` - Cài đặt kênh Minigame (Admin)\n"
+                f"`/kenh-cau-ca` - Cài đặt kênh Câu cá (Admin)\n"
+                f"`/stats` - Xem hồ sơ cá nhân"
+            ),
             inline=False
         )
         
-        # Bot's Commands (listing categories)
-        commands_list = (
-            f"{emojis.BAR} {emojis.ANIMATED_EMOJI_DOT} Câu Cá (Fishing)\n"
-            f"{emojis.BAR} {emojis.ANIMATED_EMOJI_DOT} Games Commands\n"
-            f"{emojis.BAR} {emojis.ANIMATED_EMOJI_DOT} Leaderboard Commands\n"
-            f"{emojis.BAR} {emojis.ANIMATED_EMOJI_DOT} Admin Commands\n"
-            f"{emojis.BAR} {emojis.ANIMATED_EMOJI_DOT} Utility Commands\n"
-            f"{emojis.BAR} {emojis.ANIMATED_EMOJI_DOT} Donation"
-        )
-            
-        embed.add_field(
-            name=f"{emojis.ANIMATED_EMOJI_DISCORD} **BOT'S COMMANDS** {emojis.ANIMATED_EMOJI_DISCORD}",
-            value=commands_list,
-            inline=False
-        )
-        
-        # Bot's Status
+        # Bot Status
         ping = round(self.bot.latency * 1000)
         server_count = len(self.bot.guilds)
         user_count = sum(guild.member_count for guild in self.bot.guilds)
-        # Count app commands (slash commands) since most are app_commands
-        command_count = len(self.bot.tree.get_commands())
         
         status_text = (
-            f"{emojis.BAR} {emojis.ANIMATED_EMOJI_DOT} Current Ping: {ping}ms\n"
-            f"{emojis.BAR} {emojis.ANIMATED_EMOJI_DOT} Total Commands: {command_count}\n"
-            f"{emojis.BAR} {emojis.ANIMATED_EMOJI_DOT} Total Users: {user_count}\n"
-            f"{emojis.BAR} {emojis.ANIMATED_EMOJI_DOT} Total Servers: {server_count}"
+            f"📡 Ping: `{ping}ms`\n"
+            f"🏠 Servers: `{server_count}`\n"
+            f"👥 Users: `{user_count:,}`\n"
+            f"💻 Prefix: `{config.COMMAND_PREFIX}`"
         )
         
         embed.add_field(
-            name=f"{emojis.ANIMATED_EMOJI_DISCORD} **BOT'S STATUS** {emojis.ANIMATED_EMOJI_DISCORD}",
+            name="📊 **TRẠNG THÁI HỆ THỐNG**",
             value=status_text,
             inline=False
         )
