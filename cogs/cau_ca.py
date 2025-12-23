@@ -203,11 +203,11 @@ TREASURES = [
 ]
 
 CHARMS = {
-    "Lucky Charm": {"name": "Bùa May Mắn", "price": 20000, "power": 0, "luck": 50, "duration_min": 1, "duration_max": 60, "emoji": emojis.CHARM_GREEN},
-    "Power Charm": {"name": "Bùa Sức Mạnh", "price": 20000, "power": 50, "luck": 0, "duration_min": 1, "duration_max": 60, "emoji": emojis.CHARM_RED},
-    "Golden Charm": {"name": "Bùa Vàng", "price": 20000, "power": 50, "luck": 50, "duration_min": 1, "duration_max": 60, "emoji": emojis.CHARM_YELLOW},
-    "XP Charm": {"name": "Bùa Kinh Nghiệm I", "price": 15000, "power": 0, "luck": 0, "xp_mul": 1.5, "duration_min": 1, "duration_max": 60, "emoji": "📗"},
-    "Super XP Charm": {"name": "Bùa Kinh Nghiệm II", "price": 30000, "power": 0, "luck": 0, "xp_mul": 2.0, "duration_min": 1, "duration_max": 60, "emoji": "📘"},
+    "Lucky Charm": {"name": "Bùa May Mắn", "price": 50000, "power": 0, "luck": 50, "duration_min": 1, "duration_max": 60, "emoji": emojis.CHARM_GREEN},
+    "Power Charm": {"name": "Bùa Sức Mạnh", "price": 50000, "power": 50, "luck": 0, "duration_min": 1, "duration_max": 60, "emoji": emojis.CHARM_RED},
+    "Golden Charm": {"name": "Bùa Vàng", "price": 50000, "power": 50, "luck": 50, "duration_min": 1, "duration_max": 60, "emoji": emojis.CHARM_YELLOW},
+    "XP Charm": {"name": "Bùa Kinh Nghiệm I", "price": 100000, "power": 0, "luck": 0, "xp_mul": 1.5, "duration_min": 1, "duration_max": 60, "emoji": "📗"},
+    "Super XP Charm": {"name": "Bùa Kinh Nghiệm II", "price": 200000, "power": 0, "luck": 0, "xp_mul": 2.0, "duration_min": 1, "duration_max": 60, "emoji": "📘"},
 }
 
 class ChangeBaitView(discord.ui.View):
